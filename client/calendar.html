@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Booking Calendar — Classroom Resource Booking System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .calendar-slot-card {
+      border-left: 4px solid var(--accent-blue);
+      transition: transform 0.15s ease;
+      cursor: pointer;
+    }
+    .calendar-slot-card:hover {
+      transform: translateX(4px);
+    }
+    .slot-approved { border-left-color: var(--success-color); background-color: #f0fdf4; }
+    .slot-pending { border-left-color: var(--warning-color); background-color: #fffbeb; }
+    .slot-rejected { border-left-color: var(--danger-color); background-color: #fef2f2; }
+  </style>
+</head>
+<body class="bg-light">
+
+  <div id="navbarMount"></div>
+
+  <div class="page-header">
+    <div class="container">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+          <h2 class="fw-bold mb-1">Campus Reservation Calendar</h2>
+          <p class="text-muted small mb-0">Interactive schedule across all university learning facilities, seminar halls, and laboratories</p>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="/booking.html" class="btn btn-primary">
+            <i class="bi bi-calendar-plus me-1"></i>Book Room Slot
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container pb-5">
+    <!-- Filters & Navigation Controls -->
+    <div class="custom-card p-3 mb-4">
+      <div class="row g-2 align-items-center">
+        <!-- Date Selector -->
+        <div class="col-md-3">
+          <label class="form-label small mb-1 fw-bold">Select Date</label>
+          <div class="input-group input-group-sm">
+            <button class="btn btn-outline-secondary" id="prevDayBtn" title="Previous Day"><i class="bi bi-chevron-left"></i></button>
+            <input type="date" id="calendarDate" class="form-control text-center fw-semibold">
+            <button class="btn btn-outline-secondary" id="nextDayBtn" title="Next Day"><i class="bi bi-chevron-right"></i></button>
+          </div>
+        </div>
+
+        <!-- Classroom Filter -->
+        <div class="col-6 col-md-3">
+          <label class="form-label small mb-1 fw-bold">Classroom</label>
+          <select id="classroomFilter" class="form-select form-select-sm">
+            <option value="">All Classrooms (A to J)</option>
+          </select>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="col-6 col-md-2">
+          <label class="form-label small mb-1 fw-bold">Status</label>
+          <select id="statusFilter" class="form-select form-select-sm">
+            <option value="">All Statuses</option>
+            <option value="Approved" selected>Approved Only</option>
+            <option value="Pending">Pending Only</option>
+          </select>
+        </div>
+
+        <!-- Quick View Mode Toggles -->
+        <div class="col-12 col-md-4 d-flex justify-content-md-end align-items-end gap-1 mt-2 mt-md-0">
+          <div class="btn-group btn-group-sm w-100 w-md-auto" role="group">
+            <button type="button" class="btn btn-outline-primary active" id="btnViewDay">Daily View</button>
+            <button type="button" class="btn btn-outline-primary" id="btnViewWeek">7-Day Week</button>
+          </div>
+          <button class="btn btn-sm btn-outline-secondary" id="todayBtn">Today</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendar View Container -->
+    <div class="custom-card p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <h5 class="fw-bold mb-0" id="currentViewTitle">Schedule for Today</h5>
+        <div class="d-flex gap-3 small">
+          <span class="d-flex align-items-center gap-1"><span class="badge bg-success p-1"></span> Approved</span>
+          <span class="d-flex align-items-center gap-1"><span class="badge bg-warning p-1"></span> Pending</span>
+        </div>
+      </div>
+
+      <div id="loadingCalendar" class="spinner-container">
+        <div class="spinner-border text-primary" role="status"></div>
+        <div class="small mt-2">Loading timetable...</div>
+      </div>
+
+      <div id="emptySchedule" class="empty-state d-none">
+        <i class="bi bi-calendar-event"></i>
+        <h5>No Reservations Found for this Period</h5>
+        <p class="text-muted small mb-3">All classrooms are open and available during this date window.</p>
+        <a href="/booking.html" class="btn btn-primary btn-sm">Reserve a Classroom Slot</a>
+      </div>
+
+      <div id="calendarSlotsContainer" class="d-flex flex-column gap-3 d-none"></div>
+    </div>
+  </div>
+
+  <div id="footerMount"></div>
+
+  <!-- Booking Detail Modal -->
+  <div class="modal fade" id="slotDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold" id="modalBookingId">Booking Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="modalBookingBody"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    let currentDate = new Date();
+    let viewMode = 'day'; // 'day' or 'week'
+
+    function setDateInputValue(d) {
+      document.getElementById('calendarDate').value = d.toISOString().split('T')[0];
+    }
+
+    async function loadCalendar() {
+      const loading = document.getElementById('loadingCalendar');
+      const empty = document.getElementById('emptySchedule');
+      const container = document.getElementById('calendarSlotsContainer');
+      const title = document.getElementById('currentViewTitle');
+
+      loading.classList.remove('d-none');
+      empty.classList.add('d-none');
+      container.classList.add('d-none');
+
+      const dateStr = document.getElementById('calendarDate').value;
+      const roomId = document.getElementById('classroomFilter').value;
+      const status = document.getElementById('statusFilter').value;
+
+      let url = '';
+      if (viewMode === 'day') {
+        title.textContent = `Daily Timetable: ${formatDate(dateStr)}`;
+        url = `/bookings?date=${dateStr}`;
+      } else {
+        const start = new Date(dateStr);
+        const end = new Date(dateStr);
+        end.setDate(end.getDate() + 6);
+        const startStr = start.toISOString().split('T')[0];
+        const endStr = end.toISOString().split('T')[0];
+        title.textContent = `Weekly Timetable: ${formatDate(startStr)} — ${formatDate(endStr)}`;
+        url = `/bookings?startDate=${startStr}&endDate=${endStr}`;
+      }
+
+      if (roomId) url += `&classroomId=${roomId}`;
+      if (status) url += `&status=${status}`;
+
+      const res = await fetchApi(url);
+      loading.classList.add('d-none');
+
+      if (res.success && res.data) {
+        const bookings = res.data;
+        if (bookings.length === 0) {
+          empty.classList.remove('d-none');
+        } else {
+          container.classList.remove('d-none');
+          container.innerHTML = bookings.map(b => {
+            const statusClass = b.status === 'Approved' ? 'slot-approved' : 'slot-pending';
+            const eqText = b.additionalEquipment && b.additionalEquipment.length > 0
+              ? b.additionalEquipment.map(e => `${e.resourceName} (${e.quantity})`).join(', ')
+              : 'None';
+
+            return `
+              <div class="calendar-slot-card p-3 rounded bg-white shadow-sm border ${statusClass}" onclick='openBookingModal(${JSON.stringify(b).replace(/'/g, "&apos;")})'>
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-dark font-monospace">${b.startTime} - ${b.endTime}</span>
+                    <h6 class="fw-bold mb-0 text-dark">${b.classroom ? b.classroom.name : 'Unknown Room'}</h6>
+                    <span class="badge bg-light text-primary border">${b.classroom ? b.classroom.classroomId : ''}</span>
+                  </div>
+                  <div>
+                    <span class="badge bg-secondary me-2"><i class="bi bi-calendar3 me-1"></i>${formatDate(b.date)}</span>
+                    ${formatStatusBadge(b.status)}
+                  </div>
+                </div>
+                <div class="d-flex flex-wrap justify-content-between align-items-center text-muted small mt-2 pt-2 border-top">
+                  <div>
+                    <strong>Purpose:</strong> ${b.purpose}
+                  </div>
+                  <div>
+                    <span class="me-3"><i class="bi bi-person me-1"></i>${b.user ? b.user.name : 'User'} (${b.user ? b.user.role : ''})</span>
+                    <span><i class="bi bi-people me-1"></i>${b.attendees} Attendees</span>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+    }
+
+    function openBookingModal(b) {
+      document.getElementById('modalBookingId').textContent = `Reservation Details (${b.bookingId})`;
+      const eqList = b.additionalEquipment && b.additionalEquipment.length > 0
+        ? b.additionalEquipment.map(e => `<li>${e.resourceName} (Qty: ${e.quantity})</li>`).join('')
+        : '<li>No portable equipment requested</li>';
+
+      document.getElementById('modalBookingBody').innerHTML = `
+        <div class="mb-3">
+          <h5 class="fw-bold text-primary mb-1">${b.classroom ? b.classroom.name : 'Classroom'}</h5>
+          <div class="text-muted small">${b.classroom ? b.classroom.building + ' • ' + b.classroom.floor : ''}</div>
+        </div>
+        <ul class="list-group list-group-flush small mb-3">
+          <li class="list-group-item d-flex justify-content-between px-0">
+            <span class="text-muted">Date & Time</span>
+            <span class="fw-semibold">${formatDate(b.date)} • ${b.startTime} - ${b.endTime}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between px-0">
+            <span class="text-muted">Applicant</span>
+            <span class="fw-semibold">${b.user ? b.user.name : 'User'} (${b.user ? b.user.department : ''})</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between px-0">
+            <span class="text-muted">Expected Attendees</span>
+            <span class="fw-semibold">${b.attendees} People</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between px-0">
+            <span class="text-muted">Status</span>
+            <span>${formatStatusBadge(b.status)}</span>
+          </li>
+        </ul>
+        <div class="mb-2">
+          <label class="fw-bold small text-muted">Purpose:</label>
+          <p class="small bg-light p-2 rounded">${b.purpose}</p>
+        </div>
+        <div>
+          <label class="fw-bold small text-muted">Equipment Allocated:</label>
+          <ul class="small ps-3">${eqList}</ul>
+        </div>
+      `;
+
+      new bootstrap.Modal(document.getElementById('slotDetailModal')).show();
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      renderNavbar('calendar');
+      renderFooter();
+
+      setDateInputValue(currentDate);
+
+      // Populate Classrooms Filter
+      const roomRes = await fetchApi('/classrooms');
+      if (roomRes.success && roomRes.data) {
+        const select = document.getElementById('classroomFilter');
+        roomRes.data.forEach(r => {
+          const opt = document.createElement('option');
+          opt.value = r._id;
+          opt.textContent = `${r.name} (${r.classroomId})`;
+          select.appendChild(opt);
+        });
+      }
+
+      loadCalendar();
+
+      document.getElementById('calendarDate').addEventListener('change', () => {
+        currentDate = new Date(document.getElementById('calendarDate').value);
+        loadCalendar();
+      });
+
+      document.getElementById('classroomFilter').addEventListener('change', loadCalendar);
+      document.getElementById('statusFilter').addEventListener('change', loadCalendar);
+
+      document.getElementById('prevDayBtn').addEventListener('click', () => {
+        currentDate.setDate(currentDate.getDate() - (viewMode === 'day' ? 1 : 7));
+        setDateInputValue(currentDate);
+        loadCalendar();
+      });
+
+      document.getElementById('nextDayBtn').addEventListener('click', () => {
+        currentDate.setDate(currentDate.getDate() + (viewMode === 'day' ? 1 : 7));
+        setDateInputValue(currentDate);
+        loadCalendar();
+      });
+
+      document.getElementById('todayBtn').addEventListener('click', () => {
+        currentDate = new Date();
+        setDateInputValue(currentDate);
+        loadCalendar();
+      });
+
+      document.getElementById('btnViewDay').addEventListener('click', () => {
+        viewMode = 'day';
+        document.getElementById('btnViewDay').classList.add('active');
+        document.getElementById('btnViewWeek').classList.remove('active');
+        loadCalendar();
+      });
+
+      document.getElementById('btnViewWeek').addEventListener('click', () => {
+        viewMode = 'week';
+        document.getElementById('btnViewWeek').classList.add('active');
+        document.getElementById('btnViewDay').classList.remove('active');
+        loadCalendar();
+      });
+    });
+  </script>
+</body>
+</html>

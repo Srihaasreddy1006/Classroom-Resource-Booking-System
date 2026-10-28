@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administrator Dashboard — Classroom Resource Booking System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-light">
+
+  <div id="navbarMount"></div>
+
+  <!-- Header Banner -->
+  <div class="page-header">
+    <div class="container">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+          <span class="badge bg-danger text-white mb-2">Administrator Control Center</span>
+          <h2 class="fw-bold mb-1">Campus Facilities Administration</h2>
+          <p class="text-muted small mb-0">System Control • Booking Approvals • Resource Management • Audit Monitoring</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newRoomModal">
+            <i class="bi bi-plus-circle me-1"></i>Add New Classroom
+          </button>
+          <a href="/reports.html" class="btn btn-outline-dark">
+            <i class="bi bi-file-earmark-bar-graph me-1"></i>Analytics & Audit Reports
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container pb-5">
+    <!-- Stat Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-lg-3">
+        <div class="stat-card border-warning">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-muted small fw-semibold">PENDING APPROVALS</div>
+              <div class="h3 fw-bold mb-0 text-warning" id="statAdminPending">0</div>
+            </div>
+            <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+              <i class="bi bi-hourglass-split"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-muted small fw-semibold">APPROVED RESERVATIONS</div>
+              <div class="h3 fw-bold mb-0 text-success" id="statAdminApproved">0</div>
+            </div>
+            <div class="stat-icon bg-success bg-opacity-10 text-success">
+              <i class="bi bi-check2-all"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-muted small fw-semibold">ACTIVE ROOMS</div>
+              <div class="h3 fw-bold mb-0 text-primary" id="statAdminRooms">10</div>
+            </div>
+            <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+              <i class="bi bi-door-open"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-muted small fw-semibold">TOTAL SYSTEM USERS</div>
+              <div class="h3 fw-bold mb-0 text-info" id="statAdminUsers">0</div>
+            </div>
+            <div class="stat-icon bg-info bg-opacity-10 text-info">
+              <i class="bi bi-people"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Tabs: Bookings, Classrooms, Users, Audit Logs -->
+    <div class="custom-card p-4">
+      <ul class="nav nav-pills mb-4 gap-2" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active fw-semibold" id="pending-tab" data-bs-toggle="pill" data-bs-target="#pendingPane" type="button" role="tab">
+            <i class="bi bi-inbox me-2"></i>Pending Booking Requests
+            <span class="badge bg-warning text-dark ms-1" id="pendingTabBadge">0</span>
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link fw-semibold" id="all-bookings-tab" data-bs-toggle="pill" data-bs-target="#allBookingsPane" type="button" role="tab">
+            <i class="bi bi-journal-bookmark me-2"></i>All Reservations
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link fw-semibold" id="classrooms-tab" data-bs-toggle="pill" data-bs-target="#classroomsPane" type="button" role="tab">
+            <i class="bi bi-door-open me-2"></i>Manage Classrooms
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link fw-semibold" id="users-tab" data-bs-toggle="pill" data-bs-target="#usersPane" type="button" role="tab">
+            <i class="bi bi-people me-2"></i>User Management
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content" id="adminTabsContent">
+        <!-- PENDING BOOKINGS PANE -->
+        <div class="tab-pane fade show active" id="pendingPane" role="tabpanel">
+          <div id="loadingPending" class="spinner-container">
+            <div class="spinner-border text-primary" role="status"></div>
+            <div class="small mt-2">Loading pending requests...</div>
+          </div>
+
+          <div id="emptyPending" class="empty-state d-none">
+            <i class="bi bi-check2-circle text-success"></i>
+            <h5>All clear! No pending requests</h5>
+            <p class="text-muted small mb-0">All booking requests have been reviewed.</p>
+          </div>
+
+          <div class="table-responsive d-none" id="pendingTableContainer">
+            <table class="table custom-table mb-0">
+              <thead>
+                <tr>
+                  <th>Request ID</th>
+                  <th>Applicant</th>
+                  <th>Classroom</th>
+                  <th>Date & Time</th>
+                  <th>Attendees</th>
+                  <th>Equipment</th>
+                  <th>Purpose</th>
+                  <th>Review Decision</th>
+                </tr>
+              </thead>
+              <tbody id="pendingTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ALL BOOKINGS PANE -->
+        <div class="tab-pane fade" id="allBookingsPane" role="tabpanel">
+          <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold mb-0">Complete University Booking History</h6>
+            <div class="d-flex gap-2">
+              <select class="form-select form-select-sm" id="filterStatusSelect" style="width: 150px;">
+                <option value="">All Statuses</option>
+                <option value="Approved">Approved</option>
+                <option value="Pending">Pending</option>
+                <option value="Rejected">Rejected</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table custom-table mb-0">
+              <thead>
+                <tr>
+                  <th>Booking ID</th>
+                  <th>User</th>
+                  <th>Classroom</th>
+                  <th>Date & Time</th>
+                  <th>Status</th>
+                  <th>Reviewer / Notes</th>
+                </tr>
+              </thead>
+              <tbody id="allBookingsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- MANAGE CLASSROOMS PANE -->
+        <div class="tab-pane fade" id="classroomsPane" role="tabpanel">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold mb-0">Campus Classrooms & Laboratories</h6>
+            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#newRoomModal">
+              <i class="bi bi-plus-lg me-1"></i>New Room
+            </button>
+          </div>
+          <div class="table-responsive">
+            <table class="table custom-table mb-0">
+              <thead>
+                <tr>
+                  <th>Room ID</th>
+                  <th>Name</th>
+                  <th>Building & Floor</th>
+                  <th>Type</th>
+                  <th>Capacity</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="manageClassroomsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- USER MANAGEMENT PANE -->
+        <div class="tab-pane fade" id="usersPane" role="tabpanel">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold mb-0">Registered Student & Faculty Accounts</h6>
+            <span class="badge bg-secondary" id="totalUserCountBadge">0 Users</span>
+          </div>
+          <div class="table-responsive">
+            <table class="table custom-table mb-0">
+              <thead>
+                <tr>
+                  <th>Name & Email</th>
+                  <th>Role</th>
+                  <th>Department</th>
+                  <th>College ID</th>
+                  <th>Account Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="footerMount"></div>
+
+  <!-- Rejection Modal -->
+  <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold text-danger"><i class="bi bi-x-circle me-2"></i>Reject Booking Request</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Please enter the specific reason for rejecting this booking request. The applicant will receive an in-app notification with this reason, and any reserved equipment will be restored to inventory.</p>
+          <div class="mb-3">
+            <label for="rejectionReasonInput" class="form-label">Rejection Reason <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="rejectionReasonInput" rows="3" placeholder="e.g. Mandatory academic inspection scheduled or room under maintenance." required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmRejectBtn">Reject Request</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add New Classroom Modal -->
+  <div class="modal fade" id="newRoomModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold"><i class="bi bi-door-open text-primary me-2"></i>Add New University Classroom</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="newRoomForm">
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Classroom ID <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="newClassroomId" placeholder="e.g. CR-601" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Classroom Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="newRoomName" placeholder="e.g. Classroom K" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Building <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="newBuilding" placeholder="e.g. Advanced Tech Block" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Floor <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="newFloor" placeholder="e.g. 2nd Floor" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Seating Capacity <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" id="newCapacity" min="5" max="500" placeholder="e.g. 60" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Room Type <span class="text-danger">*</span></label>
+                <select class="form-select" id="newType" required>
+                  <option value="Standard classroom">Standard classroom</option>
+                  <option value="Smart classroom">Smart classroom</option>
+                  <option value="Seminar hall">Seminar hall</option>
+                  <option value="Computer laboratory">Computer laboratory</option>
+                  <option value="Conference room">Conference room</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Facilities (comma-separated)</label>
+                <input type="text" class="form-control" id="newFacilities" placeholder="Air Conditioning, Whiteboard, High-Speed Wi-Fi">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Description <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="newDescription" rows="2" placeholder="Brief description of the room and equipment" required></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Create Classroom</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    let activeRejectBookingId = null;
+
+    function openRejectModal(bookingId) {
+      activeRejectBookingId = bookingId;
+      document.getElementById('rejectionReasonInput').value = '';
+      const modal = new bootstrap.Modal(document.getElementById('rejectModal'));
+      modal.show();
+    }
+
+    async function approveBooking(bookingId) {
+      if (!confirm('Are you sure you want to approve this reservation? The server will verify that no conflict exists before approving.')) return;
+
+      const res = await fetchApi(`/bookings/${bookingId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: 'Approved' })
+      });
+
+      if (res.success) {
+        showToast(res.message, 'success');
+        loadAllData();
+      } else {
+        showToast(res.message || 'Approval failed.', 'error');
+      }
+    }
+
+    async function toggleUser(userId) {
+      const res = await fetchApi(`/users/${userId}/toggle-status`, { method: 'PUT' });
+      if (res.success) {
+        showToast(res.message, 'success');
+        loadUsers();
+      } else {
+        showToast(res.message || 'Failed to update user status.', 'error');
+      }
+    }
+
+    async function toggleClassroomStatus(roomId, currentStatus) {
+      const newStatus = currentStatus === 'active' ? 'maintenance' : 'active';
+      const res = await fetchApi(`/classrooms/${roomId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.success) {
+        showToast(`Classroom status updated to ${newStatus}.`, 'success');
+        loadClassrooms();
+      } else {
+        showToast(res.message || 'Failed to update classroom status.', 'error');
+      }
+    }
+
+    async function loadAllData() {
+      // 1. Stats
+      const statRes = await fetchApi('/reports/dashboard-stats');
+      if (statRes.success && statRes.stats) {
+        const s = statRes.stats;
+        document.getElementById('statAdminPending').textContent = s.bookings.pending;
+        document.getElementById('statAdminApproved').textContent = s.bookings.approved;
+        document.getElementById('statAdminRooms').textContent = s.classrooms.active;
+        document.getElementById('statAdminUsers').textContent = s.users.students + s.users.faculty;
+        document.getElementById('pendingTabBadge').textContent = s.bookings.pending;
+      }
+
+      // 2. Pending Bookings
+      const pendingRes = await fetchApi('/bookings?status=Pending');
+      document.getElementById('loadingPending').classList.add('d-none');
+
+      if (pendingRes.success && pendingRes.data) {
+        const pBookings = pendingRes.data;
+        if (pBookings.length === 0) {
+          document.getElementById('emptyPending').classList.remove('d-none');
+          document.getElementById('pendingTableContainer').classList.add('d-none');
+        } else {
+          document.getElementById('emptyPending').classList.add('d-none');
+          document.getElementById('pendingTableContainer').classList.remove('d-none');
+
+          const tbody = document.getElementById('pendingTableBody');
+          tbody.innerHTML = pBookings.map(b => {
+            const eqText = b.additionalEquipment && b.additionalEquipment.length > 0
+              ? b.additionalEquipment.map(e => `${e.resourceName || 'Item'} (${e.quantity})`).join(', ')
+              : '<span class="text-muted">None</span>';
+
+            return `
+              <tr>
+                <td><span class="fw-bold font-monospace text-primary">${b.bookingId}</span></td>
+                <td>
+                  <span class="fw-semibold">${b.user ? b.user.name : 'Unknown User'}</span>
+                  <div class="small text-muted">${b.user ? b.user.email : ''} (${b.user ? b.user.role : ''})</div>
+                </td>
+                <td>
+                  <span class="fw-semibold">${b.classroom ? b.classroom.name : 'Unknown Room'}</span>
+                  <div class="small text-muted">${b.classroom ? b.classroom.classroomId : ''}</div>
+                </td>
+                <td>
+                  <div class="fw-medium">${formatDate(b.date)}</div>
+                  <div class="small text-muted"><i class="bi bi-clock me-1"></i>${b.startTime} - ${b.endTime}</div>
+                </td>
+                <td><i class="bi bi-people me-1"></i>${b.attendees}</td>
+                <td class="small">${eqText}</td>
+                <td class="small" style="max-width: 160px;">${b.purpose}</td>
+                <td>
+                  <div class="d-flex gap-1">
+                    <button class="btn btn-success btn-sm px-2" onclick="approveBooking('${b._id}')" title="Approve">
+                      <i class="bi bi-check-lg me-1"></i>Approve
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm px-2" onclick="openRejectModal('${b._id}')" title="Reject">
+                      <i class="bi bi-x-lg me-1"></i>Reject
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
+
+      // 3. All Bookings
+      loadAllBookings();
+      // 4. Classrooms
+      loadClassrooms();
+      // 5. Users
+      loadUsers();
+    }
+
+    async function loadAllBookings() {
+      const statusFilter = document.getElementById('filterStatusSelect').value;
+      const url = statusFilter ? `/bookings?status=${statusFilter}` : '/bookings';
+      const res = await fetchApi(url);
+      if (res.success && res.data) {
+        const tbody = document.getElementById('allBookingsTableBody');
+        tbody.innerHTML = res.data.map(b => `
+          <tr>
+            <td><span class="fw-bold font-monospace text-primary">${b.bookingId}</span></td>
+            <td>
+              <span class="fw-semibold">${b.user ? b.user.name : 'N/A'}</span>
+              <div class="small text-muted">${b.user ? b.user.role : ''}</div>
+            </td>
+            <td>${b.classroom ? b.classroom.name : 'N/A'}</td>
+            <td>
+              <div>${formatDate(b.date)}</div>
+              <small class="text-muted">${b.startTime} - ${b.endTime}</small>
+            </td>
+            <td>${formatStatusBadge(b.status)}</td>
+            <td class="small">
+              ${b.reviewedBy ? `<div>Approved/Reviewed by ${b.reviewedBy.name}</div>` : ''}
+              ${b.rejectionReason ? `<div class="text-danger">Reason: ${b.rejectionReason}</div>` : ''}
+              ${b.cancellationReason ? `<div class="text-muted">Cancelled: ${b.cancellationReason}</div>` : ''}
+            </td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    async function loadClassrooms() {
+      const res = await fetchApi('/classrooms');
+      if (res.success && res.data) {
+        const tbody = document.getElementById('manageClassroomsTableBody');
+        tbody.innerHTML = res.data.map(r => `
+          <tr>
+            <td><span class="badge bg-light text-primary border font-monospace">${r.classroomId}</span></td>
+            <td><strong>${r.name}</strong></td>
+            <td>${r.building}, ${r.floor}</td>
+            <td><span class="badge bg-secondary">${r.type}</span></td>
+            <td><i class="bi bi-people me-1"></i>${r.capacity} Seats</td>
+            <td>
+              <span class="badge ${r.status === 'active' ? 'bg-success' : 'bg-warning'} text-capitalize">
+                ${r.status}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-outline-secondary btn-sm" onclick="toggleClassroomStatus('${r._id}', '${r.status}')">
+                ${r.status === 'active' ? 'Mark Maintenance' : 'Mark Active'}
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    async function loadUsers() {
+      const res = await fetchApi('/users');
+      if (res.success && res.data) {
+        document.getElementById('totalUserCountBadge').textContent = `${res.data.length} Accounts`;
+        const tbody = document.getElementById('usersTableBody');
+        tbody.innerHTML = res.data.map(u => `
+          <tr>
+            <td>
+              <div class="fw-bold">${u.name}</div>
+              <div class="small text-muted">${u.email}</div>
+            </td>
+            <td><span class="badge ${u.role === 'admin' ? 'bg-danger' : u.role === 'faculty' ? 'bg-success' : 'bg-primary'} text-capitalize">${u.role}</span></td>
+            <td class="small">${u.department || 'N/A'}</td>
+            <td><span class="font-monospace small">${u.idNumber}</span></td>
+            <td>
+              <span class="badge ${u.isActive ? 'bg-success' : 'bg-danger'}">
+                ${u.isActive ? 'Active' : 'Deactivated'}
+              </span>
+            </td>
+            <td>
+              ${u.role !== 'admin' ? `
+                <button class="btn btn-sm ${u.isActive ? 'btn-outline-danger' : 'btn-outline-success'}" onclick="toggleUser('${u._id}')">
+                  ${u.isActive ? 'Deactivate' : 'Activate'}
+                </button>
+              ` : '<span class="text-muted small">System Admin</span>'}
+            </td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!Auth.requireAuth(['admin'])) return;
+
+      renderNavbar('dashboard');
+      renderFooter();
+      loadAllData();
+
+      // Filter status change
+      document.getElementById('filterStatusSelect').addEventListener('change', loadAllBookings);
+
+      // Confirm Reject Handler
+      document.getElementById('confirmRejectBtn').addEventListener('click', async () => {
+        if (!activeRejectBookingId) return;
+        const reason = document.getElementById('rejectionReasonInput').value.trim();
+
+        if (!reason) {
+          alert('Please enter a rejection reason.');
+          return;
+        }
+
+        const res = await fetchApi(`/bookings/${activeRejectBookingId}/status`, {
+          method: 'PUT',
+          body: JSON.stringify({ status: 'Rejected', rejectionReason: reason })
+        });
+
+        if (res.success) {
+          bootstrap.Modal.getInstance(document.getElementById('rejectModal')).hide();
+          showToast(res.message, 'success');
+          loadAllData();
+        } else {
+          showToast(res.message || 'Failed to reject booking.', 'error');
+        }
+      });
+
+      // New Room Form Handler
+      document.getElementById('newRoomForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+          classroomId: document.getElementById('newClassroomId').value.trim(),
+          name: document.getElementById('newRoomName').value.trim(),
+          building: document.getElementById('newBuilding').value.trim(),
+          floor: document.getElementById('newFloor').value.trim(),
+          capacity: Number(document.getElementById('newCapacity').value),
+          type: document.getElementById('newType').value,
+          description: document.getElementById('newDescription').value.trim(),
+          facilities: document.getElementById('newFacilities').value
+        };
+
+        const res = await fetchApi('/classrooms', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+
+        if (res.success) {
+          bootstrap.Modal.getInstance(document.getElementById('newRoomModal')).hide();
+          document.getElementById('newRoomForm').reset();
+          showToast('Classroom successfully created!', 'success');
+          loadClassrooms();
+        } else {
+          showToast(res.message || 'Failed to create classroom.', 'error');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

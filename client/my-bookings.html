@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Bookings — Classroom Resource Booking System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-light">
+
+  <div id="navbarMount"></div>
+
+  <div class="page-header">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h2 class="fw-bold mb-1">My Classroom Bookings</h2>
+          <p class="text-muted small mb-0">Track your past and upcoming classroom requests, approval statuses, and equipment allocations</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+          <a href="/booking.html" class="btn btn-primary">
+            <i class="bi bi-calendar-plus me-1"></i>New Booking Request
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container pb-5">
+    <!-- Filter Bar -->
+    <div class="custom-card p-3 mb-4">
+      <div class="row g-2 align-items-center">
+        <div class="col-6 col-md-3">
+          <label class="form-label small mb-1">Filter by Status</label>
+          <select id="statusFilter" class="form-select form-select-sm">
+            <option value="">All Statuses</option>
+            <option value="Approved">Approved</option>
+            <option value="Pending">Pending</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <div class="col-6 col-md-3">
+          <label class="form-label small mb-1">Filter by Date</label>
+          <input type="date" id="dateFilter" class="form-control form-control-sm">
+        </div>
+
+        <div class="col-12 col-md-6 d-flex align-items-end justify-content-md-end gap-2 mt-2 mt-md-0">
+          <button id="resetFilters" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Filters
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bookings Table Container -->
+    <div class="custom-card p-4">
+      <div id="loadingBookings" class="spinner-container">
+        <div class="spinner-border text-primary" role="status"></div>
+        <div class="small mt-2">Loading your booking history...</div>
+      </div>
+
+      <div id="emptyBookings" class="empty-state d-none">
+        <i class="bi bi-journal-x"></i>
+        <h5>No reservations found</h5>
+        <p class="text-muted small mb-3">You don't have any bookings matching the current filter.</p>
+        <a href="/booking.html" class="btn btn-primary btn-sm">Reserve a Classroom Now</a>
+      </div>
+
+      <div class="table-responsive d-none" id="tableContainer">
+        <table class="table custom-table mb-0">
+          <thead>
+            <tr>
+              <th>Booking Reference</th>
+              <th>Classroom</th>
+              <th>Date & Time</th>
+              <th>Attendees</th>
+              <th>Equipment Reserved</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="bookingsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="footerMount"></div>
+
+  <!-- Cancel Modal -->
+  <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold text-danger"><i class="bi bi-slash-circle me-2"></i>Cancel Reservation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to cancel this booking? The slot and any allocated portable equipment will be returned to the campus pool immediately.</p>
+          <div class="mb-3">
+            <label for="cancellationReasonInput" class="form-label">Cancellation Reason</label>
+            <input type="text" class="form-control" id="cancellationReasonInput" placeholder="e.g. Class postponed">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Keep Booking</button>
+          <button type="button" class="btn btn-danger" id="confirmCancelBtn">Confirm Cancellation</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    let myBookings = [];
+    let cancelTargetBookingId = null;
+
+    function openCancelModal(bookingId) {
+      cancelTargetBookingId = bookingId;
+      document.getElementById('cancellationReasonInput').value = '';
+      const modal = new bootstrap.Modal(document.getElementById('cancelModal'));
+      modal.show();
+    }
+
+    function renderBookings(list) {
+      const container = document.getElementById('tableContainer');
+      const empty = document.getElementById('emptyBookings');
+      const tbody = document.getElementById('bookingsTableBody');
+
+      if (!list || list.length === 0) {
+        container.classList.add('d-none');
+        empty.classList.remove('d-none');
+        return;
+      }
+
+      empty.classList.add('d-none');
+      container.classList.remove('d-none');
+
+      tbody.innerHTML = list.map(b => {
+        const eqText = b.additionalEquipment && b.additionalEquipment.length > 0
+          ? b.additionalEquipment.map(e => `<span class="badge bg-light text-dark border me-1">${e.resourceName} (${e.quantity})</span>`).join('')
+          : '<span class="text-muted small">None</span>';
+
+        return `
+          <tr>
+            <td>
+              <span class="fw-bold font-monospace text-primary">${b.bookingId}</span>
+              <div class="small text-muted">Created: ${new Date(b.createdAt).toLocaleDateString()}</div>
+            </td>
+            <td>
+              <span class="fw-semibold">${b.classroom ? b.classroom.name : 'Unknown Room'}</span>
+              <div class="small text-muted">${b.classroom ? b.classroom.classroomId + ' • ' + b.classroom.building : ''}</div>
+            </td>
+            <td>
+              <div class="fw-medium">${formatDate(b.date)}</div>
+              <div class="small text-muted"><i class="bi bi-clock me-1"></i>${b.startTime} - ${b.endTime}</div>
+            </td>
+            <td><i class="bi bi-people me-1 text-muted"></i>${b.attendees}</td>
+            <td style="max-width: 180px;">${eqText}</td>
+            <td>
+              ${formatStatusBadge(b.status)}
+              ${b.rejectionReason ? `<div class="small text-danger mt-1">Reason: ${b.rejectionReason}</div>` : ''}
+              ${b.cancellationReason ? `<div class="small text-muted mt-1">Cancelled: ${b.cancellationReason}</div>` : ''}
+            </td>
+            <td>
+              ${['Pending', 'Approved'].includes(b.status) ? `
+                <button class="btn btn-outline-danger btn-sm" onclick="openCancelModal('${b._id}')">
+                  Cancel
+                </button>
+              ` : '<span class="text-muted small">Locked</span>'}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function applyFilters() {
+      const status = document.getElementById('statusFilter').value;
+      const date = document.getElementById('dateFilter').value;
+
+      const filtered = myBookings.filter(b => {
+        const matchesStatus = !status || b.status === status;
+        const matchesDate = !date || b.date === date;
+        return matchesStatus && matchesDate;
+      });
+
+      renderBookings(filtered);
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!Auth.requireAuth()) return;
+
+      renderNavbar('my-bookings');
+      renderFooter();
+
+      const res = await fetchApi('/bookings/my-bookings');
+      document.getElementById('loadingBookings').classList.add('d-none');
+
+      if (res.success && res.data) {
+        myBookings = res.data;
+        renderBookings(myBookings);
+      }
+
+      document.getElementById('statusFilter').addEventListener('change', applyFilters);
+      document.getElementById('dateFilter').addEventListener('change', applyFilters);
+
+      document.getElementById('resetFilters').addEventListener('click', () => {
+        document.getElementById('statusFilter').value = '';
+        document.getElementById('dateFilter').value = '';
+        renderBookings(myBookings);
+      });
+
+      // Confirm Cancellation
+      document.getElementById('confirmCancelBtn').addEventListener('click', async () => {
+        if (!cancelTargetBookingId) return;
+        const reason = document.getElementById('cancellationReasonInput').value.trim();
+
+        const cancelRes = await fetchApi(`/bookings/${cancelTargetBookingId}/cancel`, {
+          method: 'PUT',
+          body: JSON.stringify({ cancellationReason: reason })
+        });
+
+        if (cancelRes.success) {
+          bootstrap.Modal.getInstance(document.getElementById('cancelModal')).hide();
+          showToast('Booking successfully cancelled.', 'success');
+          // Reload
+          setTimeout(() => window.location.reload(), 1000);
+        } else {
+          showToast(cancelRes.message || 'Failed to cancel booking.', 'error');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

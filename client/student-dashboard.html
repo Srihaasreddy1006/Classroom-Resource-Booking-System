@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard — Classroom Resource Booking System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <div id="navbarMount"></div>
+
+  <!-- Header Banner -->
+  <div class="page-header">
+    <div class="container">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+          <span class="badge bg-primary text-white mb-2">Student Portal</span>
+          <h2 class="fw-bold mb-1" id="studentWelcome">Welcome, Student</h2>
+          <p class="text-muted small mb-0" id="studentInfo">Department of Computer Science & Engineering • Roll: URK24CS1178</p>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="/booking.html" class="btn btn-primary">
+            <i class="bi bi-calendar-plus me-1"></i>New Booking Request
+          </a>
+          <a href="/calendar.html" class="btn btn-outline-secondary">
+            <i class="bi bi-calendar3 me-1"></i>View Schedule
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container pb-5">
+    <!-- Stat Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-muted small fw-semibold">TOTAL REQUESTS</div>
+              <div class="h3 fw-bold mb-0 text-dark" id="statTotalRequests">0</div>
+            </div>
+            <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+              <i class="bi bi-journal-text"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-muted small fw-semibold">PENDING REVIEW</div>
+              <div class="h3 fw-bold mb-0 text-warning" id="statPendingRequests">0</div>
+            </div>
+            <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+              <i class="bi bi-clock-history"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-muted small fw-semibold">APPROVED BOOKINGS</div>
+              <div class="h3 fw-bold mb-0 text-success" id="statApprovedRequests">0</div>
+            </div>
+            <div class="stat-icon bg-success bg-opacity-10 text-success">
+              <i class="bi bi-check2-circle"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-muted small fw-semibold">ACTIVE CLASSROOMS</div>
+              <div class="h3 fw-bold mb-0 text-info" id="statActiveClassrooms">10</div>
+            </div>
+            <div class="stat-icon bg-info bg-opacity-10 text-info">
+              <i class="bi bi-door-open"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Area: My Bookings & Notifications -->
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="custom-card p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">My Recent Classroom Reservations</h5>
+            <a href="/my-bookings.html" class="small text-primary fw-semibold">View All</a>
+          </div>
+
+          <div id="loadingBookings" class="spinner-container">
+            <div class="spinner-border text-primary" role="status"></div>
+            <div class="small mt-2">Loading reservations...</div>
+          </div>
+
+          <div id="emptyBookings" class="empty-state d-none">
+            <i class="bi bi-calendar-x"></i>
+            <h5>No bookings requested yet</h5>
+            <p class="text-muted small mb-3">You have not submitted any classroom or resource reservation requests.</p>
+            <a href="/booking.html" class="btn btn-primary btn-sm">Book a Classroom Now</a>
+          </div>
+
+          <div class="table-responsive d-none" id="tableContainer">
+            <table class="table custom-table mb-0">
+              <thead>
+                <tr>
+                  <th>Booking ID</th>
+                  <th>Classroom</th>
+                  <th>Date & Time</th>
+                  <th>Attendees</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="bookingsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <!-- In-App Notifications Widget -->
+        <div class="custom-card p-4 mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold mb-0"><i class="bi bi-bell me-2 text-primary"></i>Recent Notifications</h6>
+            <a href="/notifications.html" class="small text-muted">See All</a>
+          </div>
+          <div id="notificationsList" class="d-flex flex-column gap-2">
+            <div class="text-center py-3 text-muted small">Loading updates...</div>
+          </div>
+        </div>
+
+        <!-- Campus Facilities Quick Access -->
+        <div class="custom-card p-4">
+          <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-2 text-info"></i>Quick Campus Links</h6>
+          <div class="list-group list-group-flush small">
+            <a href="/classrooms.html" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center px-0">
+              <span><i class="bi bi-door-open me-2 text-primary"></i>Browse All 10 Classrooms</span>
+              <i class="bi bi-chevron-right text-muted"></i>
+            </a>
+            <a href="/resources.html" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center px-0">
+              <span><i class="bi bi-laptop me-2 text-success"></i>Equipment & Peripherals</span>
+              <i class="bi bi-chevron-right text-muted"></i>
+            </a>
+            <a href="/calendar.html" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center px-0">
+              <span><i class="bi bi-calendar-week me-2 text-warning"></i>Weekly Schedule Calendar</span>
+              <i class="bi bi-chevron-right text-muted"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="footerMount"></div>
+
+  <!-- Cancel Modal -->
+  <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold text-danger"><i class="bi bi-slash-circle me-2"></i>Cancel Reservation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to cancel this booking request? Reserved classroom slots and portable equipment will be immediately released back to other students and faculty.</p>
+          <div class="mb-3">
+            <label for="cancellationReason" class="form-label">Cancellation Reason (Optional)</label>
+            <input type="text" class="form-control" id="cancellationReason" placeholder="e.g. Workshop rescheduled">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Keep Booking</button>
+          <button type="button" class="btn btn-danger" id="confirmCancelBtn">Confirm Cancellation</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    let activeCancelBookingId = null;
+
+    function openCancelModal(bookingId) {
+      activeCancelBookingId = bookingId;
+      const modal = new bootstrap.Modal(document.getElementById('cancelModal'));
+      modal.show();
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!Auth.requireAuth(['student', 'admin'])) return;
+
+      renderNavbar('dashboard');
+      renderFooter();
+
+      const user = Auth.getUser();
+      document.getElementById('studentWelcome').textContent = `Welcome, ${user.name}`;
+      document.getElementById('studentInfo').textContent = `${user.department || 'Academic Department'} • ID: ${user.idNumber || 'N/A'}`;
+
+      // Load User Bookings
+      const res = await fetchApi('/bookings/my-bookings');
+      document.getElementById('loadingBookings').classList.add('d-none');
+
+      if (res.success && res.data) {
+        const bookings = res.data;
+        document.getElementById('statTotalRequests').textContent = bookings.length;
+        document.getElementById('statPendingRequests').textContent = bookings.filter(b => b.status === 'Pending').length;
+        document.getElementById('statApprovedRequests').textContent = bookings.filter(b => b.status === 'Approved').length;
+
+        if (bookings.length === 0) {
+          document.getElementById('emptyBookings').classList.remove('d-none');
+        } else {
+          document.getElementById('tableContainer').classList.remove('d-none');
+          const tbody = document.getElementById('bookingsTableBody');
+          tbody.innerHTML = bookings.slice(0, 8).map(b => `
+            <tr>
+              <td>
+                <span class="fw-bold font-monospace text-primary">${b.bookingId}</span>
+                <div class="small text-muted">${new Date(b.createdAt).toLocaleDateString()}</div>
+              </td>
+              <td>
+                <span class="fw-semibold">${b.classroom ? b.classroom.name : 'Unknown Room'}</span>
+                <div class="small text-muted">${b.classroom ? b.classroom.building : ''}</div>
+              </td>
+              <td>
+                <div class="fw-medium">${formatDate(b.date)}</div>
+                <div class="small text-muted"><i class="bi bi-clock me-1"></i>${b.startTime} - ${b.endTime}</div>
+              </td>
+              <td><i class="bi bi-people me-1 text-muted"></i>${b.attendees}</td>
+              <td>${formatStatusBadge(b.status)}</td>
+              <td>
+                ${['Pending', 'Approved'].includes(b.status) ? `
+                  <button class="btn btn-outline-danger btn-sm" onclick="openCancelModal('${b._id}')">
+                    Cancel
+                  </button>
+                ` : `<span class="text-muted small">No action</span>`}
+              </td>
+            </tr>
+          `).join('');
+        }
+      }
+
+      // Load Notifications widget
+      const notifRes = await fetchApi('/notifications');
+      const notifList = document.getElementById('notificationsList');
+      if (notifRes.success && notifRes.data && notifRes.data.length > 0) {
+        notifList.innerHTML = notifRes.data.slice(0, 4).map(n => `
+          <div class="p-2 border rounded ${n.isRead ? 'bg-light' : 'bg-white border-primary'}">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="fw-bold small text-truncate" style="max-width: 180px;">${n.title}</span>
+              <span class="badge ${n.isRead ? 'bg-secondary' : 'bg-primary'}" style="font-size: 0.65rem;">
+                ${n.isRead ? 'Read' : 'New'}
+              </span>
+            </div>
+            <p class="small text-muted mb-0" style="font-size: 0.78rem;">${n.message}</p>
+          </div>
+        `).join('');
+      } else {
+        notifList.innerHTML = '<div class="text-center py-2 text-muted small">No notifications yet</div>';
+      }
+
+      // Confirm Cancel Handler
+      document.getElementById('confirmCancelBtn').addEventListener('click', async () => {
+        if (!activeCancelBookingId) return;
+        const reason = document.getElementById('cancellationReason').value;
+
+        const cancelRes = await fetchApi(`/bookings/${activeCancelBookingId}/cancel`, {
+          method: 'PUT',
+          body: JSON.stringify({ cancellationReason: reason })
+        });
+
+        if (cancelRes.success) {
+          showToast('Reservation successfully cancelled.', 'success');
+          setTimeout(() => window.location.reload(), 1000);
+        } else {
+          showToast(cancelRes.message || 'Failed to cancel reservation.', 'error');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

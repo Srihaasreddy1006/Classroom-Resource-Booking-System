@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Educational Equipment & Peripherals — CRBS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-light">
+
+  <div id="navbarMount"></div>
+
+  <div class="page-header">
+    <div class="container">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+          <h2 class="fw-bold mb-1">Campus Educational Resources & Equipment</h2>
+          <p class="text-muted small mb-0">Hardware peripherals, smart displays, audio kits, and laboratory apparatus inventory</p>
+        </div>
+        <div id="adminActionGroup" class="d-none">
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newResourceModal">
+            <i class="bi bi-plus-circle me-1"></i>Add Equipment Item
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container pb-5">
+    <!-- Filters -->
+    <div class="custom-card p-3 mb-4">
+      <div class="row g-2 align-items-center">
+        <div class="col-6 col-md-3">
+          <select id="categoryFilter" class="form-select form-select-sm">
+            <option value="">All Categories</option>
+            <option value="Projectors">Projectors</option>
+            <option value="Smart boards">Smart boards</option>
+            <option value="Computers">Computers</option>
+            <option value="Whiteboards">Whiteboards</option>
+            <option value="Speakers and microphones">Speakers & Mics</option>
+            <option value="Wi-Fi facilities">Wi-Fi Facilities</option>
+            <option value="Portable presentation equipment">Presentation Kits</option>
+            <option value="Laboratory equipment">Lab Equipment</option>
+          </select>
+        </div>
+
+        <div class="col-6 col-md-3">
+          <select id="typeFilter" class="form-select form-select-sm">
+            <option value="">All Types (Installed & Portable)</option>
+            <option value="portable">Portable (Bookable)</option>
+            <option value="installed">Permanently Installed</option>
+          </select>
+        </div>
+
+        <div class="col-6 col-md-3">
+          <select id="statusFilter" class="form-select form-select-sm">
+            <option value="">All Statuses</option>
+            <option value="available">Available Only</option>
+            <option value="maintenance">Under Maintenance</option>
+          </select>
+        </div>
+
+        <div class="col-6 col-md-3">
+          <button id="resetBtn" class="btn btn-sm btn-outline-secondary w-100">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inventory Grid -->
+    <div id="loadingResources" class="spinner-container">
+      <div class="spinner-border text-primary" role="status"></div>
+      <div class="small mt-2">Loading equipment inventory...</div>
+    </div>
+
+    <div id="noResources" class="empty-state d-none">
+      <i class="bi bi-cpu"></i>
+      <h5>No matching equipment found</h5>
+      <p class="text-muted small">Try selecting another category or resetting filters.</p>
+    </div>
+
+    <div id="resourceGrid" class="row g-4 d-none"></div>
+  </div>
+
+  <div id="footerMount"></div>
+
+  <!-- Add Resource Modal (Admin Only) -->
+  <div class="modal fade" id="newResourceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle text-primary me-2"></i>Add Educational Resource</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="newResourceForm">
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Resource ID <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="newResId" placeholder="e.g. RES-PRJ-03" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Resource Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="newResName" placeholder="e.g. ViewSonic 4K Projector" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Category <span class="text-danger">*</span></label>
+                <select class="form-select" id="newResCat" required>
+                  <option value="Projectors">Projectors</option>
+                  <option value="Smart boards">Smart boards</option>
+                  <option value="Computers">Computers</option>
+                  <option value="Whiteboards">Whiteboards</option>
+                  <option value="Speakers and microphones">Speakers and microphones</option>
+                  <option value="Wi-Fi facilities">Wi-Fi facilities</option>
+                  <option value="Portable presentation equipment">Portable presentation equipment</option>
+                  <option value="Laboratory equipment">Laboratory equipment</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Type <span class="text-danger">*</span></label>
+                <select class="form-select" id="newResType" required>
+                  <option value="portable">Portable Equipment</option>
+                  <option value="installed">Installed Equipment</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Total Quantity <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" id="newResQty" min="1" value="5" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Available Quantity <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" id="newResAvailQty" min="0" value="5" required>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" id="newResDesc" rows="2" placeholder="Specifications and usage notes"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Create Resource</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    let allResources = [];
+
+    function renderResources(items) {
+      const grid = document.getElementById('resourceGrid');
+      const noResults = document.getElementById('noResources');
+      const user = Auth.getUser();
+      const isAdmin = user && user.role === 'admin';
+
+      if (!items || items.length === 0) {
+        grid.classList.add('d-none');
+        noResults.classList.remove('d-none');
+        return;
+      }
+
+      noResults.classList.add('d-none');
+      grid.classList.remove('d-none');
+
+      grid.innerHTML = items.map(res => {
+        const isInstalled = res.type === 'installed';
+        const typeBadge = isInstalled
+          ? '<span class="badge bg-secondary"><i class="bi bi-pin-angle me-1"></i>Installed</span>'
+          : '<span class="badge bg-primary"><i class="bi bi-handbag me-1"></i>Portable</span>';
+
+        const statusBadge = res.status === 'available'
+          ? '<span class="badge bg-success">Available</span>'
+          : '<span class="badge bg-warning text-dark">Maintenance</span>';
+
+        return `
+          <div class="col-md-6 col-lg-4">
+            <div class="custom-card p-4 h-100 d-flex flex-column">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <span class="badge bg-light text-primary border font-monospace mb-1">${res.resourceId}</span>
+                  <h6 class="fw-bold mb-0 text-dark">${res.name}</h6>
+                </div>
+                ${statusBadge}
+              </div>
+
+              <div class="d-flex gap-2 mb-3">
+                ${typeBadge}
+                <span class="badge bg-light text-dark border">${res.category}</span>
+              </div>
+
+              <p class="small text-muted flex-grow-1 mb-3">${res.description || 'Standard academic hardware equipment.'}</p>
+
+              ${isInstalled && res.installedIn ? `
+                <div class="small p-2 rounded bg-light border mb-3">
+                  <i class="bi bi-door-closed text-primary me-1"></i>Mounted in: <strong>${res.installedIn.name} (${res.installedIn.classroomId})</strong>
+                </div>
+              ` : ''}
+
+              <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-auto">
+                <div>
+                  <div class="small text-muted">Stock Availability:</div>
+                  <strong class="${res.availableQuantity > 0 ? 'text-success' : 'text-danger'}">
+                    ${res.availableQuantity} of ${res.totalQuantity} Units
+                  </strong>
+                </div>
+
+                ${isAdmin ? `
+                  <button class="btn btn-sm btn-outline-secondary" onclick="toggleMaintenance('${res._id}', '${res.status}')">
+                    ${res.status === 'available' ? 'Set Maintenance' : 'Set Available'}
+                  </button>
+                ` : `
+                  ${!isInstalled && res.availableQuantity > 0 ? `
+                    <a href="/booking.html" class="btn btn-sm btn-outline-primary">
+                      Request in Booking
+                    </a>
+                  ` : ''}
+                `}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function toggleMaintenance(resId, currentStatus) {
+      const newStatus = currentStatus === 'available' ? 'maintenance' : 'available';
+      const res = await fetchApi(`/resources/${resId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.success) {
+        showToast('Resource status updated.', 'success');
+        loadResources();
+      } else {
+        showToast(res.message || 'Failed to update resource.', 'error');
+      }
+    }
+
+    function applyFilters() {
+      const cat = document.getElementById('categoryFilter').value;
+      const type = document.getElementById('typeFilter').value;
+      const status = document.getElementById('statusFilter').value;
+
+      const filtered = allResources.filter(r => {
+        const matchesCat = !cat || r.category === cat;
+        const matchesType = !type || r.type === type;
+        const matchesStatus = !status || r.status === status;
+        return matchesCat && matchesType && matchesStatus;
+      });
+
+      renderResources(filtered);
+    }
+
+    async function loadResources() {
+      const res = await fetchApi('/resources');
+      document.getElementById('loadingResources').classList.add('d-none');
+
+      if (res.success && res.data) {
+        allResources = res.data;
+        renderResources(allResources);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderNavbar('resources');
+      renderFooter();
+
+      const user = Auth.getUser();
+      if (user && user.role === 'admin') {
+        document.getElementById('adminActionGroup').classList.remove('d-none');
+      }
+
+      loadResources();
+
+      document.getElementById('categoryFilter').addEventListener('change', applyFilters);
+      document.getElementById('typeFilter').addEventListener('change', applyFilters);
+      document.getElementById('statusFilter').addEventListener('change', applyFilters);
+
+      document.getElementById('resetBtn').addEventListener('click', () => {
+        document.getElementById('categoryFilter').value = '';
+        document.getElementById('typeFilter').value = '';
+        document.getElementById('statusFilter').value = '';
+        renderResources(allResources);
+      });
+
+      // New Resource Form
+      document.getElementById('newResourceForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+          resourceId: document.getElementById('newResId').value.trim(),
+          name: document.getElementById('newResName').value.trim(),
+          category: document.getElementById('newResCat').value,
+          type: document.getElementById('newResType').value,
+          totalQuantity: Number(document.getElementById('newResQty').value),
+          availableQuantity: Number(document.getElementById('newResAvailQty').value),
+          description: document.getElementById('newResDesc').value.trim()
+        };
+
+        const res = await fetchApi('/resources', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+
+        if (res.success) {
+          bootstrap.Modal.getInstance(document.getElementById('newResourceModal')).hide();
+          document.getElementById('newResourceForm').reset();
+          showToast('Resource added successfully!', 'success');
+          loadResources();
+        } else {
+          showToast(res.message || 'Failed to add resource.', 'error');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

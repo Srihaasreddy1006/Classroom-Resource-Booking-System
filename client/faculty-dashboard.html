@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faculty Dashboard — Classroom Resource Booking System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <div id="navbarMount"></div>
+
+  <!-- Header Banner -->
+  <div class="page-header">
+    <div class="container">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+          <span class="badge bg-success text-white mb-2">Faculty Portal</span>
+          <h2 class="fw-bold mb-1" id="facultyWelcome">Welcome, Faculty Member</h2>
+          <p class="text-muted small mb-0" id="facultyInfo">Department of Computer Science & Engineering • Faculty ID: FAC-CSE-042</p>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="/booking.html" class="btn btn-primary">
+            <i class="bi bi-calendar-plus me-1"></i>Book Lecture Room / Lab
+          </a>
+          <a href="/calendar.html" class="btn btn-outline-secondary">
+            <i class="bi bi-calendar3 me-1"></i>Campus Calendar
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container pb-5">
+    <!-- Stat Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-muted small fw-semibold">MY RESERVATIONS</div>
+              <div class="h3 fw-bold mb-0 text-dark" id="statMyBookings">0</div>
+            </div>
+            <div class="stat-icon bg-success bg-opacity-10 text-success">
+              <i class="bi bi-mortarboard"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-muted small fw-semibold">CONFIRMED UPCOMING</div>
+              <div class="h3 fw-bold mb-0 text-primary" id="statConfirmed">0</div>
+            </div>
+            <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+              <i class="bi bi-calendar-check"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-muted small fw-semibold">REQUESTED EQUIPMENT</div>
+              <div class="h3 fw-bold mb-0 text-warning" id="statEquipment">0</div>
+            </div>
+            <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+              <i class="bi bi-cpu"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-muted small fw-semibold">TOTAL CLASSROOMS</div>
+              <div class="h3 fw-bold mb-0 text-info" id="statTotalRooms">10</div>
+            </div>
+            <div class="stat-icon bg-info bg-opacity-10 text-info">
+              <i class="bi bi-building"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content: Faculty Bookings and Calendar Widget -->
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="custom-card p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">Upcoming Lectures & Laboratory Sessions</h5>
+            <a href="/my-bookings.html" class="small text-primary fw-semibold">All Bookings</a>
+          </div>
+
+          <div id="loadingBookings" class="spinner-container">
+            <div class="spinner-border text-primary" role="status"></div>
+            <div class="small mt-2">Loading faculty schedule...</div>
+          </div>
+
+          <div id="emptyBookings" class="empty-state d-none">
+            <i class="bi bi-calendar-check"></i>
+            <h5>No upcoming reservations</h5>
+            <p class="text-muted small mb-3">You have no scheduled lectures, labs, or seminar reservations.</p>
+            <a href="/booking.html" class="btn btn-primary btn-sm">Schedule a Lecture Room</a>
+          </div>
+
+          <div class="table-responsive d-none" id="tableContainer">
+            <table class="table custom-table mb-0">
+              <thead>
+                <tr>
+                  <th>Booking ID</th>
+                  <th>Classroom</th>
+                  <th>Date & Time</th>
+                  <th>Purpose</th>
+                  <th>Equipment Allocated</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="bookingsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <!-- Live Notifications -->
+        <div class="custom-card p-4 mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold mb-0"><i class="bi bi-bell me-2 text-primary"></i>Faculty Alerts</h6>
+            <a href="/notifications.html" class="small text-muted">View All</a>
+          </div>
+          <div id="notificationsList" class="d-flex flex-column gap-2">
+            <div class="text-center py-3 text-muted small">Loading notifications...</div>
+          </div>
+        </div>
+
+        <!-- Quick Classroom Availability Checker -->
+        <div class="custom-card p-4">
+          <h6 class="fw-bold mb-3"><i class="bi bi-search me-2 text-primary"></i>Quick Room Slot Checker</h6>
+          <form id="quickCheckForm">
+            <div class="mb-2">
+              <label class="form-label small">Classroom</label>
+              <select class="form-select form-select-sm" id="checkRoomSelect" required>
+                <option value="" disabled selected>Select Room...</option>
+              </select>
+            </div>
+            <div class="mb-2">
+              <label class="form-label small">Date</label>
+              <input type="date" class="form-control form-select-sm" id="checkDate" required>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label small">Start</label>
+                <input type="time" class="form-control form-select-sm" id="checkStart" value="09:00" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label small">End</label>
+                <input type="time" class="form-control form-select-sm" id="checkEnd" value="11:00" required>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+              Check Slot Availability
+            </button>
+            <div id="checkResult" class="mt-2 small d-none"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="footerMount"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!Auth.requireAuth(['faculty', 'admin'])) return;
+
+      renderNavbar('dashboard');
+      renderFooter();
+
+      const user = Auth.getUser();
+      document.getElementById('facultyWelcome').textContent = `Welcome, ${user.name}`;
+      document.getElementById('facultyInfo').textContent = `${user.department || 'Faculty Department'} • Faculty ID: ${user.idNumber || 'N/A'}`;
+
+      // Set default check date to tomorrow
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      document.getElementById('checkDate').value = tomorrow.toISOString().split('T')[0];
+
+      // Populate Classrooms in quick checker
+      const roomRes = await fetchApi('/classrooms');
+      if (roomRes.success && roomRes.data) {
+        document.getElementById('statTotalRooms').textContent = roomRes.data.length;
+        const select = document.getElementById('checkRoomSelect');
+        roomRes.data.forEach(r => {
+          const opt = document.createElement('option');
+          opt.value = r._id;
+          opt.textContent = `${r.name} (${r.classroomId} - ${r.type})`;
+          select.appendChild(opt);
+        });
+      }
+
+      // Load Faculty Bookings
+      const res = await fetchApi('/bookings/my-bookings');
+      document.getElementById('loadingBookings').classList.add('d-none');
+
+      if (res.success && res.data) {
+        const bookings = res.data;
+        document.getElementById('statMyBookings').textContent = bookings.length;
+        document.getElementById('statConfirmed').textContent = bookings.filter(b => b.status === 'Approved').length;
+
+        let totalEq = 0;
+        bookings.forEach(b => {
+          if (b.additionalEquipment) {
+            b.additionalEquipment.forEach(eq => totalEq += (eq.quantity || 1));
+          }
+        });
+        document.getElementById('statEquipment').textContent = totalEq;
+
+        if (bookings.length === 0) {
+          document.getElementById('emptyBookings').classList.remove('d-none');
+        } else {
+          document.getElementById('tableContainer').classList.remove('d-none');
+          const tbody = document.getElementById('bookingsTableBody');
+          tbody.innerHTML = bookings.map(b => {
+            const eqText = b.additionalEquipment && b.additionalEquipment.length > 0
+              ? b.additionalEquipment.map(e => `${e.resourceName || 'Item'} (${e.quantity})`).join(', ')
+              : '<span class="text-muted">None</span>';
+
+            return `
+              <tr>
+                <td><span class="fw-bold font-monospace text-primary">${b.bookingId}</span></td>
+                <td>
+                  <span class="fw-semibold">${b.classroom ? b.classroom.name : 'N/A'}</span>
+                  <div class="small text-muted">${b.classroom ? b.classroom.type : ''}</div>
+                </td>
+                <td>
+                  <div class="fw-medium">${formatDate(b.date)}</div>
+                  <div class="small text-muted"><i class="bi bi-clock me-1"></i>${b.startTime} - ${b.endTime}</div>
+                </td>
+                <td class="small" style="max-width: 180px;">${b.purpose}</td>
+                <td class="small">${eqText}</td>
+                <td>${formatStatusBadge(b.status)}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
+
+      // Quick Check Slot Form
+      document.getElementById('quickCheckForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const roomId = document.getElementById('checkRoomSelect').value;
+        const date = document.getElementById('checkDate').value;
+        const startTime = document.getElementById('checkStart').value;
+        const endTime = document.getElementById('checkEnd').value;
+        const resultEl = document.getElementById('checkResult');
+
+        resultEl.classList.remove('d-none', 'alert-success', 'alert-danger');
+        resultEl.className = 'mt-2 alert p-2 small';
+        resultEl.textContent = 'Checking slot availability on server...';
+
+        const check = await fetchApi(`/bookings/check-availability?classroomId=${roomId}&date=${date}&startTime=${startTime}&endTime=${endTime}`);
+        if (check.success) {
+          if (check.available) {
+            resultEl.classList.add('alert-success');
+            resultEl.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i><strong>Available!</strong> No conflicting reservations for this slot. <a href="/booking.html?roomId=${roomId}&date=${date}&start=${startTime}&end=${endTime}" class="alert-link">Book Now</a>`;
+          } else {
+            resultEl.classList.add('alert-danger');
+            resultEl.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-1"></i><strong>Conflict detected:</strong> Slot is already booked.`;
+          }
+        } else {
+          resultEl.classList.add('alert-danger');
+          resultEl.textContent = check.message || 'Availability check failed.';
+        }
+      });
+
+      // Load Notifications widget
+      const notifRes = await fetchApi('/notifications');
+      const notifList = document.getElementById('notificationsList');
+      if (notifRes.success && notifRes.data && notifRes.data.length > 0) {
+        notifList.innerHTML = notifRes.data.slice(0, 4).map(n => `
+          <div class="p-2 border rounded ${n.isRead ? 'bg-light' : 'bg-white border-success'}">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="fw-bold small text-truncate" style="max-width: 180px;">${n.title}</span>
+              <span class="badge ${n.isRead ? 'bg-secondary' : 'bg-success'}" style="font-size: 0.65rem;">
+                ${n.isRead ? 'Read' : 'New'}
+              </span>
+            </div>
+            <p class="small text-muted mb-0" style="font-size: 0.78rem;">${n.message}</p>
+          </div>
+        `).join('');
+      } else {
+        notifList.innerHTML = '<div class="text-center py-2 text-muted small">No notifications yet</div>';
+      }
+    });
+  </script>
+</body>
+</html>

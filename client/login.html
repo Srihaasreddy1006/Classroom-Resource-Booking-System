@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — Classroom Resource Booking System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-light">
+
+  <div id="navbarMount"></div>
+
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-7 col-lg-5">
+        
+        <div class="custom-card p-4 p-sm-5 shadow">
+          <div class="text-center mb-4">
+            <div class="stat-icon bg-primary bg-opacity-10 text-primary mx-auto mb-2" style="width: 56px; height: 56px;">
+              <i class="bi bi-box-arrow-in-right fs-3"></i>
+            </div>
+            <h3 class="fw-bold mb-1">Welcome Back</h3>
+            <p class="text-muted small">Sign in to your university booking portal</p>
+          </div>
+
+          <!-- Alert feedback box -->
+          <div id="alertBox" class="alert alert-danger d-none" role="alert"></div>
+
+          <form id="loginForm" novalidate>
+            <div class="mb-3">
+              <label for="email" class="form-label">College Email Address <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                <input type="email" class="form-control" id="email" placeholder="e.g. student@college.edu" required>
+              </div>
+              <div class="invalid-feedback">Please enter a valid email address.</div>
+            </div>
+
+            <div class="mb-4">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label for="password" class="form-label mb-0">Password <span class="text-danger">*</span></label>
+              </div>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                <input type="password" class="form-control" id="password" placeholder="Enter your password" required>
+                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+              <div class="invalid-feedback">Please enter your password.</div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn btn-primary w-100 py-2 fw-semibold">
+              <span id="btnSpinner" class="spinner-border spinner-border-sm me-2 d-none" role="status"></span>
+              <span id="btnText">Sign In</span>
+            </button>
+          </form>
+
+          <hr class="my-4">
+
+          <!-- Demo Quick Fill Buttons for College IA3 Evaluation -->
+          <div class="card bg-light border-0 p-3 mb-3">
+            <h6 class="fw-bold text-dark small mb-2"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>One-Click Evaluation Credentials:</h6>
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-outline-primary btn-sm flex-grow-1" type="button" onclick="fillCreds('student@college.edu', 'StudentPassword@123')">
+                <i class="bi bi-person me-1"></i>Student
+              </button>
+              <button class="btn btn-outline-success btn-sm flex-grow-1" type="button" onclick="fillCreds('rajesh.faculty@college.edu', 'FacultyPassword@123')">
+                <i class="bi bi-mortarboard me-1"></i>Faculty
+              </button>
+              <button class="btn btn-outline-danger btn-sm flex-grow-1" type="button" onclick="fillCreds('admin@college.edu', 'AdminPassword@123')">
+                <i class="bi bi-shield-lock me-1"></i>Admin
+              </button>
+            </div>
+          </div>
+
+          <div class="text-center small text-muted">
+            Don't have an account yet? <a href="/register.html" class="fw-semibold text-primary">Register here</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="footerMount"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    function fillCreds(email, pass) {
+      document.getElementById('email').value = email;
+      document.getElementById('password').value = pass;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderNavbar('login');
+      renderFooter();
+
+      // Check query parameter for auto-fill
+      const params = new URLSearchParams(window.location.search);
+      const roleParam = params.get('role');
+      if (roleParam === 'admin') fillCreds('admin@college.edu', 'AdminPassword@123');
+      else if (roleParam === 'faculty') fillCreds('rajesh.faculty@college.edu', 'FacultyPassword@123');
+      else if (roleParam === 'student') fillCreds('student@college.edu', 'StudentPassword@123');
+
+      // Toggle password visibility
+      const toggleBtn = document.getElementById('togglePassword');
+      const passInput = document.getElementById('password');
+      toggleBtn.addEventListener('click', () => {
+        const type = passInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passInput.setAttribute('type', type);
+        toggleBtn.querySelector('i').classList.toggle('bi-eye');
+        toggleBtn.querySelector('i').classList.toggle('bi-eye-slash');
+      });
+
+      // Handle form submission
+      const form = document.getElementById('loginForm');
+      const alertBox = document.getElementById('alertBox');
+      const submitBtn = document.getElementById('submitBtn');
+      const btnSpinner = document.getElementById('btnSpinner');
+      const btnText = document.getElementById('btnText');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        alertBox.classList.add('d-none');
+
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+
+        // Validation
+        let valid = true;
+        if (!email) {
+          document.getElementById('email').classList.add('is-invalid');
+          valid = false;
+        } else {
+          document.getElementById('email').classList.remove('is-invalid');
+        }
+
+        if (!password) {
+          document.getElementById('password').classList.add('is-invalid');
+          valid = false;
+        } else {
+          document.getElementById('password').classList.remove('is-invalid');
+        }
+
+        if (!valid) return;
+
+        // Loading state
+        submitBtn.disabled = true;
+        btnSpinner.classList.remove('d-none');
+        btnText.textContent = 'Authenticating...';
+
+        const res = await fetchApi('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, password })
+        });
+
+        submitBtn.disabled = false;
+        btnSpinner.classList.add('d-none');
+        btnText.textContent = 'Sign In';
+
+        if (res.success && res.token && res.user) {
+          Auth.setToken(res.token);
+          Auth.setUser(res.user);
+
+          showToast(`Welcome back, ${res.user.name}!`, 'success');
+
+          // Redirect based on role or URL redirect param
+          const redirect = params.get('redirect');
+          if (redirect) {
+            window.location.href = redirect;
+          } else if (res.user.role === 'admin') {
+            window.location.href = '/admin-dashboard.html';
+          } else if (res.user.role === 'faculty') {
+            window.location.href = '/faculty-dashboard.html';
+          } else {
+            window.location.href = '/student-dashboard.html';
+          }
+        } else {
+          alertBox.textContent = res.message || 'Login failed. Please verify your credentials.';
+          alertBox.classList.remove('d-none');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

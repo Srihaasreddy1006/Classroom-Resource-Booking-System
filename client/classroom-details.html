@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classroom Details & Schedule — CRBS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-light">
+
+  <div id="navbarMount"></div>
+
+  <div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/index.html">Home</a></li>
+        <li class="breadcrumb-item"><a href="/classrooms.html">Classrooms</a></li>
+        <li class="breadcrumb-item active" id="breadcrumbRoomName">Classroom Details</li>
+      </ol>
+    </nav>
+
+    <div id="loadingDetails" class="spinner-container">
+      <div class="spinner-border text-primary" role="status"></div>
+      <div class="small mt-2">Loading classroom specifications...</div>
+    </div>
+
+    <div id="contentDetails" class="d-none">
+      <div class="row g-4 mb-4">
+        <!-- Room Info Column -->
+        <div class="col-lg-7">
+          <div class="custom-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <span class="badge bg-primary text-white mb-1" id="roomTypeBadge">Standard Classroom</span>
+                <h2 class="fw-bold mb-0" id="roomTitle">Classroom Name</h2>
+              </div>
+              <span class="badge bg-secondary font-monospace fs-6" id="roomCodeBadge">CR-101</span>
+            </div>
+
+            <div class="text-muted small mb-3">
+              <i class="bi bi-geo-alt me-1 text-danger"></i><span id="roomLocation">Building & Floor</span>
+              <span class="mx-2">•</span>
+              <i class="bi bi-people-fill me-1 text-primary"></i><span id="roomCapacity">60 Seats Maximum</span>
+              <span class="mx-2">•</span>
+              <span id="roomStatusBadge" class="badge bg-success text-capitalize">Active</span>
+            </div>
+
+            <p class="text-secondary" id="roomDescription">Detailed description of this classroom facility.</p>
+
+            <h6 class="fw-bold mt-4 mb-2"><i class="bi bi-check2-circle text-success me-1"></i>Installed Facilities & Amenities:</h6>
+            <div id="facilitiesContainer" class="d-flex flex-wrap gap-2 mb-4"></div>
+
+            <h6 class="fw-bold mb-2"><i class="bi bi-cpu text-primary me-1"></i>Installed Multimedia & Lab Hardware:</h6>
+            <div id="installedEquipmentContainer" class="list-group mb-4"></div>
+
+            <div class="d-flex gap-2 pt-3 border-top">
+              <a id="bookRoomBtn" href="/booking.html" class="btn btn-primary px-4">
+                <i class="bi bi-calendar-plus me-1"></i>Book This Room
+              </a>
+              <a href="/classrooms.html" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Back to Directory
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Room Image / Visual Column -->
+        <div class="col-lg-5">
+          <div class="custom-card overflow-hidden h-100 d-flex flex-column">
+            <div style="height: 260px; background-color: #cbd5e1;">
+              <img id="roomImage" src="" alt="Classroom Image" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <div class="p-4 bg-light flex-grow-1">
+              <h6 class="fw-bold mb-2"><i class="bi bi-shield-check text-success me-1"></i>Booking Policies & Capacity Rules</h6>
+              <ul class="small text-muted ps-3 mb-0">
+                <li>Double bookings are strictly prohibited and prevented by server validation.</li>
+                <li>Expected attendees must not exceed the verified seating capacity.</li>
+                <li>Reservations must be submitted at least 30 minutes in duration.</li>
+                <li>Requests are reviewed by facilities administration before approval.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Daily Schedule & Time Slot Availability -->
+      <div class="custom-card p-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+          <div>
+            <h4 class="fw-bold mb-1"><i class="bi bi-calendar-day me-2 text-primary"></i>Daily Schedule & Booked Slots</h4>
+            <p class="text-muted small mb-0">Select any date to inspect existing reservations and open time slots</p>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <label for="scheduleDate" class="form-label small fw-semibold mb-0">Select Date:</label>
+            <input type="date" class="form-control form-control-sm" id="scheduleDate" style="width: 160px;">
+            <button class="btn btn-sm btn-outline-primary" id="refreshScheduleBtn">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="scheduleLoading" class="spinner-container d-none">
+          <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+          <div class="small mt-1">Loading schedule...</div>
+        </div>
+
+        <div id="scheduleEmpty" class="alert alert-info py-3 d-none">
+          <i class="bi bi-info-circle-fill me-2"></i>No approved or pending reservations for this date. The classroom is fully available!
+        </div>
+
+        <div class="table-responsive" id="scheduleTableContainer">
+          <table class="table custom-table mb-0">
+            <thead>
+              <tr>
+                <th>Booking Ref</th>
+                <th>Time Interval</th>
+                <th>Duration</th>
+                <th>Applicant</th>
+                <th>Event / Purpose</th>
+                <th>Reservation Status</th>
+              </tr>
+            </thead>
+            <tbody id="scheduleTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="footerMount"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    let currentRoomId = null;
+
+    async function loadSchedule(dateStr) {
+      if (!currentRoomId || !dateStr) return;
+
+      const scheduleLoading = document.getElementById('scheduleLoading');
+      const scheduleEmpty = document.getElementById('scheduleEmpty');
+      const scheduleTableContainer = document.getElementById('scheduleTableContainer');
+      const tbody = document.getElementById('scheduleTableBody');
+
+      scheduleLoading.classList.remove('d-none');
+      scheduleEmpty.classList.add('d-none');
+      tbody.innerHTML = '';
+
+      const res = await fetchApi(`/classrooms/${currentRoomId}/schedule?date=${dateStr}`);
+      scheduleLoading.classList.add('d-none');
+
+      if (res.success && res.bookings) {
+        if (res.bookings.length === 0) {
+          scheduleEmpty.classList.remove('d-none');
+          scheduleTableContainer.classList.add('d-none');
+        } else {
+          scheduleEmpty.classList.add('d-none');
+          scheduleTableContainer.classList.remove('d-none');
+
+          tbody.innerHTML = res.bookings.map(b => {
+            const [sh, sm] = b.startTime.split(':').map(Number);
+            const [eh, em] = b.endTime.split(':').map(Number);
+            const durationMins = (eh * 60 + em) - (sh * 60 + sm);
+            const durationHours = (durationMins / 60).toFixed(1);
+
+            return `
+              <tr>
+                <td><span class="fw-bold font-monospace text-primary">${b.bookingId}</span></td>
+                <td>
+                  <span class="badge bg-light text-dark border font-monospace fs-6">
+                    <i class="bi bi-clock me-1 text-primary"></i>${b.startTime} - ${b.endTime}
+                  </span>
+                </td>
+                <td>${durationHours} hrs (${durationMins} mins)</td>
+                <td>
+                  <span class="fw-semibold">${b.user ? b.user.name : 'University Member'}</span>
+                  <div class="small text-muted">${b.user ? b.user.department : ''}</div>
+                </td>
+                <td class="small" style="max-width: 250px;">${b.purpose}</td>
+                <td>${formatStatusBadge(b.status)}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      renderNavbar('classrooms');
+      renderFooter();
+
+      const params = new URLSearchParams(window.location.search);
+      const roomId = params.get('id');
+
+      if (!roomId) {
+        alert('No classroom ID specified.');
+        window.location.href = '/classrooms.html';
+        return;
+      }
+
+      currentRoomId = roomId;
+
+      // Set default schedule date to tomorrow
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const defDate = tomorrow.toISOString().split('T')[0];
+      document.getElementById('scheduleDate').value = defDate;
+
+      // Fetch Room Details
+      const res = await fetchApi(`/classrooms/${roomId}`);
+      document.getElementById('loadingDetails').classList.add('d-none');
+
+      if (res.success && res.data) {
+        const room = res.data;
+        document.getElementById('contentDetails').classList.remove('d-none');
+
+        document.getElementById('breadcrumbRoomName').textContent = room.name;
+        document.getElementById('roomTitle').textContent = room.name;
+        document.getElementById('roomTypeBadge').textContent = room.type;
+        document.getElementById('roomCodeBadge').textContent = room.classroomId;
+        document.getElementById('roomLocation').textContent = `${room.building}, ${room.floor}`;
+        document.getElementById('roomCapacity').textContent = `${room.capacity} Max Seats`;
+        document.getElementById('roomDescription').textContent = room.description;
+        document.getElementById('roomImage').src = room.imageUrl || 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800';
+
+        const statusBadge = document.getElementById('roomStatusBadge');
+        statusBadge.textContent = room.status;
+        statusBadge.className = `badge ${room.status === 'active' ? 'bg-success' : 'bg-warning'} text-capitalize`;
+
+        // Direct Book Button
+        document.getElementById('bookRoomBtn').href = `/booking.html?roomId=${room._id}`;
+
+        // Facilities
+        const facContainer = document.getElementById('facilitiesContainer');
+        if (room.facilities && room.facilities.length > 0) {
+          facContainer.innerHTML = room.facilities.map(f => `
+            <span class="badge bg-light text-dark border p-2"><i class="bi bi-check2 text-success me-1"></i>${f}</span>
+          `).join('');
+        } else {
+          facContainer.innerHTML = '<span class="text-muted small">Standard campus utilities</span>';
+        }
+
+        // Installed Equipment
+        const eqContainer = document.getElementById('installedEquipmentContainer');
+        if (room.installedEquipment && room.installedEquipment.length > 0) {
+          eqContainer.innerHTML = room.installedEquipment.map(eq => `
+            <div class="list-group-item d-flex justify-content-between align-items-center p-2">
+              <div>
+                <span class="fw-semibold small">${eq.name}</span>
+                <div class="small text-muted font-monospace">${eq.resourceId} • ${eq.category}</div>
+              </div>
+              <span class="badge bg-success">Installed</span>
+            </div>
+          `).join('');
+        } else {
+          eqContainer.innerHTML = '<div class="text-muted small p-2 border rounded bg-light">No permanently mounted special equipment. Portable kits can be requested upon booking.</div>';
+        }
+
+        // Load initial schedule
+        loadSchedule(defDate);
+      } else {
+        alert(res.message || 'Failed to load classroom details.');
+        window.location.href = '/classrooms.html';
+      }
+
+      // Schedule date changer
+      document.getElementById('scheduleDate').addEventListener('change', (e) => {
+        loadSchedule(e.target.value);
+      });
+
+      document.getElementById('refreshScheduleBtn').addEventListener('click', () => {
+        loadSchedule(document.getElementById('scheduleDate').value);
+      });
+    });
+  </script>
+</body>
+</html>

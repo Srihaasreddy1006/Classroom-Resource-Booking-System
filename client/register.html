@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register Account — Classroom Resource Booking System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-light">
+
+  <div id="navbarMount"></div>
+
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-9 col-lg-7">
+        
+        <div class="custom-card p-4 p-sm-5 shadow">
+          <div class="text-center mb-4">
+            <div class="stat-icon bg-success bg-opacity-10 text-success mx-auto mb-2" style="width: 56px; height: 56px;">
+              <i class="bi bi-person-plus fs-3"></i>
+            </div>
+            <h3 class="fw-bold mb-1">Create an Account</h3>
+            <p class="text-muted small">Register as a Student or Faculty member to book campus facilities</p>
+          </div>
+
+          <!-- Alert feedback box -->
+          <div id="alertBox" class="alert alert-danger d-none" role="alert"></div>
+
+          <form id="registerForm" novalidate>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="name" placeholder="e.g. Arun Kumar Reddy" required>
+                <div class="invalid-feedback">Name is required.</div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="email" class="form-label">College Email Address <span class="text-danger">*</span></label>
+                <input type="email" class="form-control" id="email" placeholder="e.g. student@college.edu" required>
+                <div class="invalid-feedback">Valid college email is required.</div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="role" class="form-label">Academic Role <span class="text-danger">*</span></label>
+                <select class="form-select" id="role" required>
+                  <option value="student" selected>Student</option>
+                  <option value="faculty">Faculty Member</option>
+                </select>
+              </div>
+
+              <div class="col-md-6">
+                <label for="idNumber" class="form-label">College Roll / ID Number <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="idNumber" placeholder="e.g. URK24CS1178" required>
+                <div class="invalid-feedback">ID or Roll number is required.</div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="department" class="form-label">Department <span class="text-danger">*</span></label>
+                <select class="form-select" id="department" required>
+                  <option value="" disabled selected>Select Department...</option>
+                  <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+                  <option value="Information Technology">Information Technology</option>
+                  <option value="Electronics & Communication">Electronics & Communication</option>
+                  <option value="Mechanical Engineering">Mechanical Engineering</option>
+                  <option value="Civil Engineering">Civil Engineering</option>
+                  <option value="Electrical & Electronics">Electrical & Electronics</option>
+                  <option value="Sciences & Humanities">Sciences & Humanities</option>
+                </select>
+                <div class="invalid-feedback">Please choose your department.</div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="phoneNumber" class="form-label">Contact Phone Number</label>
+                <input type="tel" class="form-control" id="phoneNumber" placeholder="e.g. +91 98765 43210">
+              </div>
+
+              <div class="col-md-6">
+                <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                <input type="password" class="form-control" id="password" placeholder="At least 6 characters" required minlength="6">
+                <div class="invalid-feedback">Password must be at least 6 characters.</div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="confirmPassword" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                <input type="password" class="form-control" id="confirmPassword" placeholder="Re-enter password" required>
+                <div class="invalid-feedback">Passwords do not match.</div>
+              </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn btn-primary w-100 py-2 mt-4 fw-semibold">
+              <span id="btnSpinner" class="spinner-border spinner-border-sm me-2 d-none" role="status"></span>
+              <span id="btnText">Create Account</span>
+            </button>
+          </form>
+
+          <div class="text-center small text-muted mt-4">
+            Already have an account? <a href="/login.html" class="fw-semibold text-primary">Sign in here</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="footerMount"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      renderNavbar('register');
+      renderFooter();
+
+      const form = document.getElementById('registerForm');
+      const alertBox = document.getElementById('alertBox');
+      const submitBtn = document.getElementById('submitBtn');
+      const btnSpinner = document.getElementById('btnSpinner');
+      const btnText = document.getElementById('btnText');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        alertBox.classList.add('d-none');
+
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const role = document.getElementById('role').value;
+        const idNumber = document.getElementById('idNumber').value.trim();
+        const department = document.getElementById('department').value;
+        const phoneNumber = document.getElementById('phoneNumber').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        // Validation
+        let valid = true;
+
+        if (!name) { document.getElementById('name').classList.add('is-invalid'); valid = false; }
+        else { document.getElementById('name').classList.remove('is-invalid'); }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !emailRegex.test(email)) { document.getElementById('email').classList.add('is-invalid'); valid = false; }
+        else { document.getElementById('email').classList.remove('is-invalid'); }
+
+        if (!idNumber) { document.getElementById('idNumber').classList.add('is-invalid'); valid = false; }
+        else { document.getElementById('idNumber').classList.remove('is-invalid'); }
+
+        if (!department) { document.getElementById('department').classList.add('is-invalid'); valid = false; }
+        else { document.getElementById('department').classList.remove('is-invalid'); }
+
+        if (!password || password.length < 6) { document.getElementById('password').classList.add('is-invalid'); valid = false; }
+        else { document.getElementById('password').classList.remove('is-invalid'); }
+
+        if (password !== confirmPassword) {
+          document.getElementById('confirmPassword').classList.add('is-invalid');
+          valid = false;
+        } else {
+          document.getElementById('confirmPassword').classList.remove('is-invalid');
+        }
+
+        if (!valid) return;
+
+        submitBtn.disabled = true;
+        btnSpinner.classList.remove('d-none');
+        btnText.textContent = 'Registering Account...';
+
+        const res = await fetchApi('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+            role,
+            department,
+            idNumber,
+            phoneNumber
+          })
+        });
+
+        submitBtn.disabled = false;
+        btnSpinner.classList.add('d-none');
+        btnText.textContent = 'Create Account';
+
+        if (res.success && res.token && res.user) {
+          Auth.setToken(res.token);
+          Auth.setUser(res.user);
+
+          showToast('Registration successful! Redirecting...', 'success');
+          setTimeout(() => {
+            if (res.user.role === 'faculty') {
+              window.location.href = '/faculty-dashboard.html';
+            } else {
+              window.location.href = '/student-dashboard.html';
+            }
+          }, 1000);
+        } else {
+          alertBox.textContent = res.message || 'Registration failed.';
+          alertBox.classList.remove('d-none');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

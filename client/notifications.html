@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications — Classroom Resource Booking System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-light">
+
+  <div id="navbarMount"></div>
+
+  <div class="page-header">
+    <div class="container">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+          <h2 class="fw-bold mb-1">In-App Notifications</h2>
+          <p class="text-muted small mb-0">Live status alerts for booking submissions, approvals, rejections, and schedule updates</p>
+        </div>
+        <div>
+          <button id="markAllReadBtn" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-check2-all me-1"></i>Mark All as Read
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container pb-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-9">
+        <div class="custom-card p-4">
+          <div id="loadingNotifs" class="spinner-container">
+            <div class="spinner-border text-primary" role="status"></div>
+            <div class="small mt-2">Loading notifications...</div>
+          </div>
+
+          <div id="emptyNotifs" class="empty-state d-none">
+            <i class="bi bi-bell-slash"></i>
+            <h5>No notifications yet</h5>
+            <p class="text-muted small mb-0">When your reservations are reviewed or updated, you'll see alerts here.</p>
+          </div>
+
+          <div id="notifsContainer" class="d-flex flex-column gap-3 d-none"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="footerMount"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    async function markSingleRead(id) {
+      const res = await fetchApi(`/notifications/${id}/read`, { method: 'PUT' });
+      if (res.success) {
+        loadNotifications();
+        updateNotificationBadge();
+      }
+    }
+
+    async function loadNotifications() {
+      const loading = document.getElementById('loadingNotifs');
+      const empty = document.getElementById('emptyNotifs');
+      const container = document.getElementById('notifsContainer');
+
+      loading.classList.remove('d-none');
+      empty.classList.add('d-none');
+      container.classList.add('d-none');
+
+      const res = await fetchApi('/notifications');
+      loading.classList.add('d-none');
+
+      if (res.success && res.data) {
+        if (res.data.length === 0) {
+          empty.classList.remove('d-none');
+        } else {
+          container.classList.remove('d-none');
+          container.innerHTML = res.data.map(n => {
+            let icon = 'bi-bell-fill text-primary';
+            let badgeClass = 'bg-primary';
+
+            if (n.type === 'booking_approved') {
+              icon = 'bi-check-circle-fill text-success';
+              badgeClass = 'bg-success';
+            } else if (n.type === 'booking_rejected') {
+              icon = 'bi-x-circle-fill text-danger';
+              badgeClass = 'bg-danger';
+            } else if (n.type === 'booking_cancelled') {
+              icon = 'bi-slash-circle-fill text-secondary';
+              badgeClass = 'bg-secondary';
+            }
+
+            return `
+              <div class="p-3 rounded border d-flex gap-3 align-items-start ${n.isRead ? 'bg-light' : 'bg-white border-primary shadow-sm'}">
+                <i class="bi ${icon} fs-4 mt-1"></i>
+                <div class="flex-grow-1">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <h6 class="fw-bold mb-0">${n.title}</h6>
+                    <small class="text-muted">${new Date(n.createdAt).toLocaleString()}</small>
+                  </div>
+                  <p class="small text-secondary mb-2">${n.message}</p>
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="badge ${badgeClass} text-capitalize" style="font-size: 0.7rem;">${n.type.replace('_', ' ')}</span>
+                    ${!n.isRead ? `
+                      <button class="btn btn-link btn-sm text-decoration-none p-0" onclick="markSingleRead('${n._id}')">
+                        Mark as read
+                      </button>
+                    ` : '<span class="text-muted small">Read</span>'}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!Auth.requireAuth()) return;
+
+      renderNavbar('notifications');
+      renderFooter();
+      loadNotifications();
+
+      document.getElementById('markAllReadBtn').addEventListener('click', async () => {
+        const res = await fetchApi('/notifications/read-all', { method: 'PUT' });
+        if (res.success) {
+          showToast('All notifications marked as read', 'success');
+          loadNotifications();
+          updateNotificationBadge();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
