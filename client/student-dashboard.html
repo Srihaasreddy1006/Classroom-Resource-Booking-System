@@ -8,43 +8,66 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
+<body class="bg-light">
 
-  <div id="navbarMount"></div>
+  <div class="app-layout">
+    <!-- Navy Blue Sidebar -->
+    <div id="sidebarMount"></div>
 
-  <!-- Header Banner -->
-  <div class="page-header">
-    <div class="container">
-      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-        <div>
-          <span class="badge bg-primary text-white mb-2">Student Portal</span>
-          <h2 class="fw-bold mb-1" id="studentWelcome">Welcome, Student</h2>
-          <p class="text-muted small mb-0" id="studentInfo">Department of Computer Science & Engineering • Roll: URK24CS1178</p>
+    <div class="app-main">
+      <!-- Top Navigation Bar -->
+      <div class="top-bar-navy">
+        <div class="d-flex align-items-center gap-3">
+          <button class="btn btn-sm btn-outline-secondary d-lg-none" type="button" onclick="toggleSidebar()">
+            <i class="bi bi-list fs-5"></i>
+          </button>
+          <div class="fw-bold fs-5 text-dark">
+            <i class="bi bi-mortarboard-fill text-primary me-2"></i>Student Portal
+          </div>
         </div>
-        <div class="d-flex gap-2">
-          <a href="/booking.html" class="btn btn-primary">
-            <i class="bi bi-calendar-plus me-1"></i>New Booking Request
+        <div class="d-flex align-items-center gap-3">
+          <a href="/booking.html" class="btn btn-sm btn-primary d-none d-sm-inline-flex align-items-center gap-1 shadow-sm">
+            <i class="bi bi-calendar-plus"></i>New Booking
           </a>
-          <a href="/calendar.html" class="btn btn-outline-secondary">
-            <i class="bi bi-calendar3 me-1"></i>View Schedule
+          <a href="/notifications.html" class="btn btn-sm btn-light border position-relative" title="Notifications">
+            <i class="bi bi-bell"></i>
+            <span id="navUnreadBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
           </a>
+          <div class="dropdown">
+            <button class="btn btn-sm btn-light border dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+              <span class="rounded-circle bg-primary text-white fw-bold px-2 py-1 small" id="topStudentAvatar">S</span>
+              <span class="d-none d-md-inline" id="topStudentName">Student</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow">
+              <li><a class="dropdown-item" href="/profile.html"><i class="bi bi-person me-2"></i>Profile</a></li>
+              <li><a class="dropdown-item" href="/my-bookings.html"><i class="bi bi-journal-check me-2"></i>My Bookings</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="Auth.logout()"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+            </ul>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <div class="container pb-5">
-    <!-- Stat Cards -->
+  <!-- Dashboard Content Container -->
+  <div class="container-fluid px-4 py-4">
+    <!-- Header Greeting -->
+    <div class="mb-4">
+      <h3 class="fw-bold text-dark mb-1">Dashboard</h3>
+      <h4 class="fw-bold text-dark mb-1" id="studentWelcome">Welcome, Student!</h4>
+      <p class="text-muted small mb-0" id="studentInfo">Here's a quick overview of your bookings and available resources.</p>
+    </div>
+
+    <!-- 4 Stat Cards in a row -->
     <div class="row g-3 mb-4">
       <div class="col-sm-6 col-lg-3">
         <div class="stat-card">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <div class="text-muted small fw-semibold">TOTAL REQUESTS</div>
+              <div class="text-muted small fw-semibold">Total Bookings</div>
               <div class="h3 fw-bold mb-0 text-dark" id="statTotalRequests">0</div>
             </div>
             <div class="stat-icon bg-primary bg-opacity-10 text-primary">
-              <i class="bi bi-journal-text"></i>
+              <i class="bi bi-calendar-check"></i>
             </div>
           </div>
         </div>
@@ -54,10 +77,10 @@
         <div class="stat-card">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <div class="text-muted small fw-semibold">PENDING REVIEW</div>
-              <div class="h3 fw-bold mb-0 text-warning" id="statPendingRequests">0</div>
+              <div class="text-muted small fw-semibold">Upcoming Bookings</div>
+              <div class="h3 fw-bold mb-0 text-success" id="statPendingRequests">0</div>
             </div>
-            <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+            <div class="stat-icon bg-success bg-opacity-10 text-success">
               <i class="bi bi-clock-history"></i>
             </div>
           </div>
@@ -68,11 +91,11 @@
         <div class="stat-card">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <div class="text-muted small fw-semibold">APPROVED BOOKINGS</div>
-              <div class="h3 fw-bold mb-0 text-success" id="statApprovedRequests">0</div>
+              <div class="text-muted small fw-semibold">Available Classrooms</div>
+              <div class="h3 fw-bold mb-0" style="color: #9333ea;" id="statActiveClassrooms">6</div>
             </div>
-            <div class="stat-icon bg-success bg-opacity-10 text-success">
-              <i class="bi bi-check2-circle"></i>
+            <div class="stat-icon" style="background: rgba(147, 51, 234, 0.1); color: #9333ea;">
+              <i class="bi bi-building"></i>
             </div>
           </div>
         </div>
@@ -82,24 +105,24 @@
         <div class="stat-card">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <div class="text-muted small fw-semibold">ACTIVE CLASSROOMS</div>
-              <div class="h3 fw-bold mb-0 text-info" id="statActiveClassrooms">10</div>
+              <div class="text-muted small fw-semibold">Confirmed Bookings</div>
+              <div class="h3 fw-bold mb-0 text-primary" id="statApprovedRequests">0</div>
             </div>
-            <div class="stat-icon bg-info bg-opacity-10 text-info">
-              <i class="bi bi-door-open"></i>
+            <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+              <i class="bi bi-patch-check-fill"></i>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Main Content Area: My Bookings & Notifications -->
-    <div class="row g-4">
-      <div class="col-lg-8">
+    <!-- Upcoming Bookings Table Card -->
+    <div class="row g-4 mb-4">
+      <div class="col-12">
         <div class="custom-card p-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="fw-bold mb-0">My Recent Classroom Reservations</h5>
-            <a href="/my-bookings.html" class="small text-primary fw-semibold">View All</a>
+            <h5 class="fw-bold mb-0 text-dark">Upcoming Bookings</h5>
+            <a href="/my-bookings.html" class="btn btn-sm btn-outline-primary">View All</a>
           </div>
 
           <div id="loadingBookings" class="spinner-container">
@@ -107,23 +130,22 @@
             <div class="small mt-2">Loading reservations...</div>
           </div>
 
-          <div id="emptyBookings" class="empty-state d-none">
-            <i class="bi bi-calendar-x"></i>
-            <h5>No bookings requested yet</h5>
-            <p class="text-muted small mb-3">You have not submitted any classroom or resource reservation requests.</p>
-            <a href="/booking.html" class="btn btn-primary btn-sm">Book a Classroom Now</a>
+          <div id="emptyBookings" class="empty-state d-none py-4 text-center">
+            <i class="bi bi-calendar-x fs-1 text-muted"></i>
+            <h5 class="mt-2">No upcoming bookings</h5>
+            <p class="text-muted small mb-3">You don't have any reservations scheduled right now.</p>
+            <a href="/booking.html" class="btn btn-primary btn-sm">Book a Resource Now</a>
           </div>
 
           <div class="table-responsive d-none" id="tableContainer">
-            <table class="table custom-table mb-0">
-              <thead>
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
                 <tr>
-                  <th>Booking ID</th>
-                  <th>Classroom</th>
-                  <th>Date & Time</th>
-                  <th>Attendees</th>
-                  <th>Status</th>
-                  <th>Action</th>
+                  <th class="text-muted small fw-semibold">Resource Name</th>
+                  <th class="text-muted small fw-semibold">Type</th>
+                  <th class="text-muted small fw-semibold">Date & Time</th>
+                  <th class="text-muted small fw-semibold">Status</th>
+                  <th class="text-muted small fw-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody id="bookingsTableBody"></tbody>
@@ -131,6 +153,7 @@
           </div>
         </div>
       </div>
+    </div>
 
       <div class="col-lg-4">
         <!-- In-App Notifications Widget -->
@@ -168,6 +191,9 @@
 
   <div id="footerMount"></div>
 
+    </div> <!-- /app-main -->
+  </div> <!-- /app-layout -->
+
   <!-- Cancel Modal -->
   <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
@@ -203,55 +229,81 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      if (!Auth.requireAuth(['student', 'admin'])) return;
+      if (!Auth.requireAuth(['student', 'user', 'admin', 'faculty', 'staff'])) return;
 
-      renderNavbar('dashboard');
-      renderFooter();
+      renderSidebar('dashboard');
+      const u = Auth.getUser();
+      if (u) {
+        const studentNameEl = document.getElementById('topStudentName');
+        if (studentNameEl) studentNameEl.textContent = u.name;
+        const studentAvatarEl = document.getElementById('topStudentAvatar');
+        if (studentAvatarEl) studentAvatarEl.textContent = u.name ? u.name[0].toUpperCase() : 'S';
+      }
 
       const user = Auth.getUser();
-      document.getElementById('studentWelcome').textContent = `Welcome, ${user.name}`;
-      document.getElementById('studentInfo').textContent = `${user.department || 'Academic Department'} • ID: ${user.idNumber || 'N/A'}`;
+      if (user) {
+        const welcomeEl = document.getElementById('studentWelcome');
+        if (welcomeEl) welcomeEl.textContent = `Welcome, ${user.name}`;
+        const infoEl = document.getElementById('studentInfo');
+        if (infoEl) infoEl.textContent = `${user.department || 'Academic Department'} • ID: ${user.idNumber || 'N/A'}`;
+      }
 
       // Load User Bookings
       const res = await fetchApi('/bookings/my-bookings');
-      document.getElementById('loadingBookings').classList.add('d-none');
+      const loaderEl = document.getElementById('loadingBookings');
+      if (loaderEl) loaderEl.classList.add('d-none');
 
       if (res.success && res.data) {
         const bookings = res.data;
-        document.getElementById('statTotalRequests').textContent = bookings.length;
-        document.getElementById('statPendingRequests').textContent = bookings.filter(b => b.status === 'Pending').length;
-        document.getElementById('statApprovedRequests').textContent = bookings.filter(b => b.status === 'Approved').length;
+        const statTotal = document.getElementById('statTotalRequests');
+        if (statTotal) statTotal.textContent = bookings.length;
+        const statPending = document.getElementById('statPendingRequests');
+        if (statPending) statPending.textContent = bookings.filter(b => b.status === 'Pending').length;
+        const statApproved = document.getElementById('statApprovedRequests');
+        if (statApproved) statApproved.textContent = bookings.filter(b => b.status === 'Approved').length;
+
+        // Load classroom count
+        fetchApi('/classrooms').then(cRes => {
+          if (cRes.success && cRes.data) {
+            const roomEl = document.getElementById('statActiveClassrooms');
+            if (roomEl) roomEl.textContent = cRes.data.length;
+          }
+        });
 
         if (bookings.length === 0) {
           document.getElementById('emptyBookings').classList.remove('d-none');
         } else {
           document.getElementById('tableContainer').classList.remove('d-none');
           const tbody = document.getElementById('bookingsTableBody');
-          tbody.innerHTML = bookings.slice(0, 8).map(b => `
-            <tr>
-              <td>
-                <span class="fw-bold font-monospace text-primary">${b.bookingId}</span>
-                <div class="small text-muted">${new Date(b.createdAt).toLocaleDateString()}</div>
-              </td>
-              <td>
-                <span class="fw-semibold">${b.classroom ? b.classroom.name : 'Unknown Room'}</span>
-                <div class="small text-muted">${b.classroom ? b.classroom.building : ''}</div>
-              </td>
-              <td>
-                <div class="fw-medium">${formatDate(b.date)}</div>
-                <div class="small text-muted"><i class="bi bi-clock me-1"></i>${b.startTime} - ${b.endTime}</div>
-              </td>
-              <td><i class="bi bi-people me-1 text-muted"></i>${b.attendees}</td>
-              <td>${formatStatusBadge(b.status)}</td>
-              <td>
-                ${['Pending', 'Approved'].includes(b.status) ? `
-                  <button class="btn btn-outline-danger btn-sm" onclick="openCancelModal('${b._id}')">
-                    Cancel
+          tbody.innerHTML = bookings.slice(0, 8).map(b => {
+            const roomName = b.classroom ? b.classroom.name : (b.equipment ? b.equipment.name : 'Classroom');
+            const roomType = b.classroom ? (b.classroom.type.toLowerCase().includes('lab') ? 'Lab' : 'Classroom') : 'Facility';
+            const statusBadge = b.status === 'Approved'
+              ? '<span class="badge bg-success">Confirmed</span>'
+              : (b.status === 'Pending'
+                ? '<span class="badge bg-warning text-dark">Pending</span>'
+                : `<span class="badge bg-secondary">${b.status}</span>`);
+
+            return `
+              <tr>
+                <td>
+                  <span class="fw-bold text-dark">${roomName}</span>
+                </td>
+                <td>
+                  <span class="text-secondary">${roomType}</span>
+                </td>
+                <td>
+                  <span class="text-dark">${formatDate(b.date)} ${b.startTime} - ${b.endTime}</span>
+                </td>
+                <td>${statusBadge}</td>
+                <td>
+                  <button class="btn btn-sm btn-primary px-3" onclick="openCancelModal('${b._id}')">
+                    View
                   </button>
-                ` : `<span class="text-muted small">No action</span>`}
-              </td>
-            </tr>
-          `).join('');
+                </td>
+              </tr>
+            `;
+          }).join('');
         }
       }
 

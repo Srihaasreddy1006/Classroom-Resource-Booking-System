@@ -16,8 +16,18 @@ The application provides a centralized platform enabling **Students** and **Facu
 - **Dynamic Equipment Allocation:** Tracks inventory for portable presentation kits, projectors, smart boards, and lab apparatus with automatic quantity deduction and restoration upon cancellation.
 - **Role-Based Access Control (RBAC):** Tailored dashboards and protected API endpoints for **Students**, **Faculty**, and **Administrators**.
 - **15 Integrated Frontend Views:** Completely responsive HTML5, CSS3, JavaScript, and Bootstrap 5 frontend.
-- **Zero-Friction Fallback Database:** Connects to standard local MongoDB (`mongodb://127.0.0.1:27017/classroom_booking_db`) with seamless in-memory MongoDB auto-fallback for instantaneous college evaluation on any system.
-- **Automated Test Suite:** 17 Jest and Supertest test cases verifying authentication, RBAC, double-booking prevention, capacity limits, and equipment restitution.
+- **Zero-Friction Fallback Database:** Connects to standard local MongoDB (`mongodb://127.0.0.1:27017/classroom_resource_booking`) with seamless in-memory MongoDB auto-fallback for instantaneous college evaluation on any system.
+- **Automated Test Suite:** 18 Jest and Supertest test cases verifying authentication, RBAC, double-booking prevention, capacity limits, and equipment restitution.
+
+---
+
+## 🍃 MongoDB & MongoDB Compass: Understanding the Architecture
+
+> [!IMPORTANT]
+> **What is MongoDB Server vs. MongoDB Compass?**
+> - **MongoDB Server (`mongod`)** is the actual database engine that runs as a background service/daemon, listening for network connections on `mongodb://127.0.0.1:27017`. It stores the actual database files on disk, manages BSON documents, indexes, and queries.
+> - **MongoDB Compass** is ONLY a **Graphical User Interface (GUI) client**. It is **NOT** the database server itself. Compass connects *to* a running MongoDB server to let developers visually explore databases, inspect collections, edit documents, and test queries.
+> - **You cannot run Compass alone without a running MongoDB server instance.** If the MongoDB server service is stopped, Compass will report a connection error (`ECONNREFUSED 127.0.0.1:27017`).
 
 ---
 
@@ -27,57 +37,117 @@ The application provides a centralized platform enabling **Students** and **Facu
 | :--- | :--- | :--- |
 | **Frontend** | HTML5, CSS3, JavaScript (ES6+), Bootstrap 5.3, Bootstrap Icons | Responsive, mobile-first design, fast rendering without heavy framework overhead. |
 | **Backend Framework** | Node.js (v20+), Express.js (v4.21) | Asynchronous non-blocking event-driven runtime ideal for concurrent booking requests. |
-| **Database** | MongoDB, Mongoose ODM (v8.9) | Document database providing dynamic schemas, indexing, and transactional data integrity. |
+| **Database** | MongoDB, Mongoose ODM (v8.9) | Document database providing dynamic schemas, indexing, and transactional data integrity. Database: `classroom_resource_booking`. |
+| **GUI Tool** | MongoDB Compass | Visual exploration tool to inspect collections (`users`, `classrooms`, `resources`, `bookings`, `notifications`, `auditlogs`). |
 | **Security & Auth** | JWT (`jsonwebtoken`), `bcryptjs`, `helmet`, `express-rate-limit` | Industry-standard password hashing, stateless token authorization, and header protection. |
 | **Testing** | `jest`, `supertest`, `mongodb-memory-server` | Comprehensive automated API testing and double-booking conflict simulation. |
 
 ---
 
-## 🚀 Quick Start Guide
+## 🚀 Step-by-Step Setup & Execution Instructions
 
-### Prerequisites
-- Node.js (v18.0.0 or higher)
-- npm (v9.0.0 or higher)
-- *(Optional)* Local MongoDB installed and running on port 27017 (If MongoDB is not running locally, the application automatically launches an in-memory database instance).
+Follow these exact steps from installation to complete admin and student testing:
 
-### 1. Installation
-Clone or navigate to the project directory:
-```powershell
-cd c:\Users\reddy\Downloads\BHUMI-X_FINAL_FIXED_V3
-```
-
-Install backend dependencies:
+### Step 1: Install Node.js Dependencies
+Open a PowerShell or Terminal in the project root directory (`c:\Users\reddy\Downloads\BHUMI-X_FINAL_FIXED_V3`):
 ```powershell
 npm install
 ```
 
-### 2. Configure Environment
-Copy or verify the `.env` file (pre-configured):
-```powershell
-cp .env.example .env
-```
-Key variables:
+### Step 2: Start MongoDB Locally
+Ensure the local MongoDB Community Server is started on your computer:
+- **Windows (Service):**
+  Open PowerShell as Administrator:
+  ```powershell
+  net start MongoDB
+  ```
+  *(Or check Services.msc -> Ensure "MongoDB Server (MongoDB)" is Running).*
+- **Manual Command:**
+  ```powershell
+  mongod --dbpath "C:\data\db"
+  ```
+*(Note: If local MongoDB is not installed or unavailable, our system automatically boots a built-in MongoMemoryServer fallback so you can evaluate the project immediately without errors).*
+
+### Step 3: Connect Using MongoDB Compass (GUI)
+1. Launch the **MongoDB Compass** desktop application.
+2. In the **New Connection** screen, enter the standard connection URI:
+   ```
+   mongodb://127.0.0.1:27017
+   ```
+3. Click the green **Connect** button.
+4. Compass connects to the running MongoDB server and shows existing databases.
+   *(Remember: Compass is the visual viewer; MongoDB server is doing the data storage).*
+
+### Step 4: Configure Environment & Database Name
+Inspect the `.env` file in the project root:
 ```ini
 PORT=5000
 NODE_ENV=development
-MONGODB_URI=mongodb://127.0.0.1:27017/classroom_booking_db
+MONGODB_URI=mongodb://127.0.0.1:27017/classroom_resource_booking
 JWT_SECRET=crbs_jwt_secret_college_ia3_super_secure_key_2026
 JWT_EXPIRES_IN=7d
+CLIENT_URL=http://localhost:5000
 ```
+The database name is `classroom_resource_booking`.
 
-### 3. Seed Sample Data
-Populate the database with the 10 university classrooms (Classroom A to J), educational equipment inventory, and demo user accounts:
+### Step 5: Seed the Database & Create Initial Resources
+Run the seeder script to populate 10 classrooms (A to J), equipment inventory (projectors, smart boards, mics, workstations), and initial accounts:
 ```powershell
 npm run seed
 ```
+Now, switch to **MongoDB Compass**, click **Refresh** in the left sidebar, and you will see the `classroom_resource_booking` database with populated collections: `users`, `classrooms`, `resources`, `bookings`, `notifications`, `auditlogs`.
 
-### 4. Start the Application
-Run the Express server:
+### Step 6: Create or Elevate an Administrator Account
+You can securely create an administrator account using the documented CLI setup command (never hardcoded in production):
+```powershell
+npm run create-admin -- --email admin@college.edu --password MyAdminSecurePass123
+```
+Or configure `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env` before running `npm run seed`.
+
+### Step 7: Start the Server
+Run the Express application server:
 ```powershell
 npm start
+# Or for auto-restart on changes:
+npm run dev
 ```
-The application will be live at:
+The server outputs:
+```
+====================================================
+ 🎓 CLASSROOM RESOURCE BOOKING SYSTEM (CRBS) 
+ Web Technology (23CS2048) - Internal Assessment 3  
+====================================================
+ Server running in development mode
+ Local URL: http://localhost:5000
+ API Endpoint: http://localhost:5000/api
+====================================================
+```
+
+### Step 8: Open the Frontend Application
+Open your web browser (Chrome, Edge, or Firefox) and navigate to:
 👉 **http://localhost:5000**
+
+### Step 9: Register a New User & Test Booking
+1. Click **Register** on the top navigation bar (or visit `http://localhost:5000/register.html`).
+2. Fill in your details (select role **Student** or **Faculty Member** / **Staff Member**) and submit.
+3. You will be logged in and redirected to your personalized Dashboard.
+4. Go to **Classrooms** (`/classrooms.html`) or **Book Room** (`/booking.html`).
+5. Choose a classroom (e.g. Classroom A), choose a date and time slot (e.g. tomorrow from 09:00 to 11:00), specify attendees and purpose, and submit.
+6. The request is created in **Pending** status.
+
+### Step 10: Test Overlapping-Booking Rejection (Conflict Engine)
+1. Try submitting another booking request for the **SAME classroom**, on the **SAME date**, with an overlapping time (e.g. 10:00 to 12:00).
+2. The server immediately catches the conflict and rejects the submission with **HTTP 409 Conflict**.
+3. The interface displays a red warning: *"Classroom conflict detected! Classroom A is already booked on [date] between 09:00 and 11:00"* and dynamically recommends alternative active classrooms!
+
+### Step 11: Test Administrator Approval & Management
+1. Log out or open an Incognito window.
+2. Sign in as Admin (`admin@college.edu` with your admin password).
+3. Open the **Admin Dashboard** (`/admin-dashboard.html`).
+4. Under **Pending Booking Requests**, you will see the pending request.
+5. Click **Approve** -> The booking status transitions to **Approved**, and the user receives an in-app notification!
+6. Click **Reject** on another request -> Enter a rejection reason -> The reservation is marked **Rejected** and any reserved portable equipment is restored to inventory immediately.
+7. Test adding a classroom: click **Add New Classroom**, fill the modal, and verify it appears in the directory and in MongoDB Compass!
 
 ---
 

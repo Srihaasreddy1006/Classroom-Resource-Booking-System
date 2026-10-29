@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 let mongoServerInstance = null;
 
 const connectDB = async () => {
-  const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/classroom_booking_db';
+  const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/classroom_resource_booking';
   try {
     const conn = await mongoose.connect(uri, {
       serverSelectionTimeoutMS: 3000

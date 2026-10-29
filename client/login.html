@@ -28,7 +28,7 @@
           <!-- Alert feedback box -->
           <div id="alertBox" class="alert alert-danger d-none" role="alert"></div>
 
-          <form id="loginForm" novalidate>
+          <form id="loginForm" novalidate onsubmit="handleLoginSubmit(event); return false;">
             <div class="mb-3">
               <label for="email" class="form-label">College Email Address <span class="text-danger">*</span></label>
               <div class="input-group">
@@ -60,18 +60,15 @@
 
           <hr class="my-4">
 
-          <!-- Demo Quick Fill Buttons for College IA3 Evaluation -->
+          <!-- Simple 1 User and 1 Admin Quick Logins -->
           <div class="card bg-light border-0 p-3 mb-3">
             <h6 class="fw-bold text-dark small mb-2"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>One-Click Evaluation Credentials:</h6>
-            <div class="d-flex flex-wrap gap-2">
-              <button class="btn btn-outline-primary btn-sm flex-grow-1" type="button" onclick="fillCreds('student@college.edu', 'StudentPassword@123')">
-                <i class="bi bi-person me-1"></i>Student
+            <div class="d-flex gap-2">
+              <button class="btn btn-outline-primary btn-sm flex-grow-1 fw-bold py-2" type="button" onclick="fillCreds('user@college.edu', 'User@123')">
+                <i class="bi bi-person-fill me-1"></i>User Login
               </button>
-              <button class="btn btn-outline-success btn-sm flex-grow-1" type="button" onclick="fillCreds('rajesh.faculty@college.edu', 'FacultyPassword@123')">
-                <i class="bi bi-mortarboard me-1"></i>Faculty
-              </button>
-              <button class="btn btn-outline-danger btn-sm flex-grow-1" type="button" onclick="fillCreds('admin@college.edu', 'AdminPassword@123')">
-                <i class="bi bi-shield-lock me-1"></i>Admin
+              <button class="btn btn-outline-danger btn-sm flex-grow-1 fw-bold py-2" type="button" onclick="fillCreds('admin@college.edu', 'Admin@123')">
+                <i class="bi bi-shield-lock-fill me-1"></i>Admin Login
               </button>
             </div>
           </div>
@@ -91,8 +88,107 @@
   <script src="/js/api.js"></script>
   <script>
     function fillCreds(email, pass) {
-      document.getElementById('email').value = email;
-      document.getElementById('password').value = pass;
+      const emailEl = document.getElementById('email');
+      const passEl = document.getElementById('password');
+      if (emailEl) emailEl.value = email;
+      if (passEl) passEl.value = pass;
+    }
+
+    async function handleLoginSubmit(e) {
+      if (e && e.preventDefault) e.preventDefault();
+
+      const alertBox = document.getElementById('alertBox');
+      const submitBtn = document.getElementById('submitBtn');
+      const btnSpinner = document.getElementById('btnSpinner');
+      const btnText = document.getElementById('btnText');
+      const emailEl = document.getElementById('email');
+      const passwordEl = document.getElementById('password');
+
+      if (alertBox) alertBox.classList.add('d-none');
+
+      const email = emailEl ? emailEl.value.trim() : '';
+      const password = passwordEl ? passwordEl.value : '';
+
+      // Validation
+      let valid = true;
+      if (!email) {
+        if (emailEl) emailEl.classList.add('is-invalid');
+        valid = false;
+      } else {
+        if (emailEl) emailEl.classList.remove('is-invalid');
+      }
+
+      if (!password) {
+        if (passwordEl) passwordEl.classList.add('is-invalid');
+        valid = false;
+      } else {
+        if (passwordEl) passwordEl.classList.remove('is-invalid');
+      }
+
+      if (!valid) return;
+
+      // Loading state
+      if (submitBtn) submitBtn.disabled = true;
+      if (btnSpinner) btnSpinner.classList.remove('d-none');
+      if (btnText) btnText.textContent = 'Authenticating...';
+
+      try {
+        const res = await fetchApi('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, password })
+        });
+
+        if (submitBtn) submitBtn.disabled = false;
+        if (btnSpinner) btnSpinner.classList.add('d-none');
+        if (btnText) btnText.textContent = 'Sign In';
+
+        if (res.success && res.token && res.user) {
+          Auth.setToken(res.token);
+          Auth.setUser(res.user);
+
+          showToast(`Welcome back, ${res.user.name}!`, 'success');
+
+          if (alertBox) {
+            alertBox.className = 'alert alert-success d-block';
+            alertBox.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>Login successful! Redirecting to dashboard...';
+          }
+
+          const params = new URLSearchParams(window.location.search);
+          const redirect = params.get('redirect');
+          let target = '';
+          if (redirect) {
+            target = redirect;
+          } else if (res.user.role === 'admin') {
+            target = '/admin-dashboard.html';
+          } else if (res.user.role === 'faculty' || res.user.role === 'staff') {
+            target = '/faculty-dashboard.html';
+          } else {
+            target = '/student-dashboard.html';
+          }
+
+          if (window.location.protocol === 'file:') {
+            target = 'http://localhost:5000' + target;
+          }
+
+          setTimeout(() => {
+            window.location.href = target;
+          }, 350);
+        } else {
+          if (alertBox) {
+            alertBox.className = 'alert alert-danger d-block';
+            alertBox.textContent = res.message || 'Login failed. Please verify your credentials.';
+          }
+        }
+      } catch (err) {
+        console.error('Login submit error:', err);
+        if (submitBtn) submitBtn.disabled = false;
+        if (btnSpinner) btnSpinner.classList.add('d-none');
+        if (btnText) btnText.textContent = 'Sign In';
+        if (alertBox) {
+          alertBox.className = 'alert alert-danger d-block';
+          alertBox.textContent = 'Network connection failed. Please ensure the backend server is running.';
+        }
+      }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -102,88 +198,39 @@
       // Check query parameter for auto-fill
       const params = new URLSearchParams(window.location.search);
       const roleParam = params.get('role');
-      if (roleParam === 'admin') fillCreds('admin@college.edu', 'AdminPassword@123');
-      else if (roleParam === 'faculty') fillCreds('rajesh.faculty@college.edu', 'FacultyPassword@123');
-      else if (roleParam === 'student') fillCreds('student@college.edu', 'StudentPassword@123');
+      if (roleParam === 'admin') {
+        fillCreds('admin@college.edu', 'Admin@123');
+      } else if (roleParam === 'user' || roleParam === 'student' || roleParam === 'faculty' || roleParam === 'staff') {
+        fillCreds('user@college.edu', 'User@123');
+      }
 
       // Toggle password visibility
       const toggleBtn = document.getElementById('togglePassword');
       const passInput = document.getElementById('password');
-      toggleBtn.addEventListener('click', () => {
-        const type = passInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passInput.setAttribute('type', type);
-        toggleBtn.querySelector('i').classList.toggle('bi-eye');
-        toggleBtn.querySelector('i').classList.toggle('bi-eye-slash');
-      });
+      if (toggleBtn && passInput) {
+        toggleBtn.addEventListener('click', () => {
+          const type = passInput.getAttribute('type') === 'password' ? 'text' : 'password';
+          passInput.setAttribute('type', type);
+          toggleBtn.querySelector('i').classList.toggle('bi-eye');
+          toggleBtn.querySelector('i').classList.toggle('bi-eye-slash');
+        });
+      }
 
       // Handle form submission
       const form = document.getElementById('loginForm');
-      const alertBox = document.getElementById('alertBox');
+      if (form) {
+        form.addEventListener('submit', handleLoginSubmit);
+      }
       const submitBtn = document.getElementById('submitBtn');
-      const btnSpinner = document.getElementById('btnSpinner');
-      const btnText = document.getElementById('btnText');
-
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        alertBox.classList.add('d-none');
-
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
-
-        // Validation
-        let valid = true;
-        if (!email) {
-          document.getElementById('email').classList.add('is-invalid');
-          valid = false;
-        } else {
-          document.getElementById('email').classList.remove('is-invalid');
-        }
-
-        if (!password) {
-          document.getElementById('password').classList.add('is-invalid');
-          valid = false;
-        } else {
-          document.getElementById('password').classList.remove('is-invalid');
-        }
-
-        if (!valid) return;
-
-        // Loading state
-        submitBtn.disabled = true;
-        btnSpinner.classList.remove('d-none');
-        btnText.textContent = 'Authenticating...';
-
-        const res = await fetchApi('/auth/login', {
-          method: 'POST',
-          body: JSON.stringify({ email, password })
-        });
-
-        submitBtn.disabled = false;
-        btnSpinner.classList.add('d-none');
-        btnText.textContent = 'Sign In';
-
-        if (res.success && res.token && res.user) {
-          Auth.setToken(res.token);
-          Auth.setUser(res.user);
-
-          showToast(`Welcome back, ${res.user.name}!`, 'success');
-
-          // Redirect based on role or URL redirect param
-          const redirect = params.get('redirect');
-          if (redirect) {
-            window.location.href = redirect;
-          } else if (res.user.role === 'admin') {
-            window.location.href = '/admin-dashboard.html';
-          } else if (res.user.role === 'faculty') {
-            window.location.href = '/faculty-dashboard.html';
+      if (submitBtn) {
+        submitBtn.addEventListener('click', (e) => {
+          if (form && form.requestSubmit) {
+            form.requestSubmit();
           } else {
-            window.location.href = '/student-dashboard.html';
+            handleLoginSubmit(e);
           }
-        } else {
-          alertBox.textContent = res.message || 'Login failed. Please verify your credentials.';
-          alertBox.classList.remove('d-none');
-        }
-      });
+        });
+      }
     });
   </script>
 </body>

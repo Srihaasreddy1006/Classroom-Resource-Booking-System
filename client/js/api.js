@@ -1,5 +1,23 @@
 // Central API & Authentication Utility
-const API_BASE = '/api';
+const API_BASE = (typeof window !== 'undefined' && window.location && (window.location.protocol === 'file:' || (window.location.port !== '5000' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1')))
+  ? 'http://localhost:5000/api'
+  : '/api';
+
+// Helpful disk-access notification banner if opened via file://
+if (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:') {
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!document.getElementById('fileProtocolWarning')) {
+      const banner = document.createElement('div');
+      banner.id = 'fileProtocolWarning';
+      banner.className = 'alert alert-warning text-center m-0 rounded-0 py-2 border-bottom shadow-sm fw-medium small';
+      banner.style.position = 'sticky';
+      banner.style.top = '0';
+      banner.style.zIndex = '10500';
+      banner.innerHTML = `<i class="bi bi-info-circle-fill me-1 text-warning"></i> Tip: You opened this file directly from your disk (<code>file://</code>). For the best experience and database connectivity, open <a href="http://localhost:5000" class="alert-link fw-bold text-decoration-underline">http://localhost:5000</a> in your browser.`;
+      document.body.prepend(banner);
+    }
+  });
+}
 
 // Authentication storage helpers
 const Auth = {
@@ -20,26 +38,31 @@ const Auth = {
   setUser(user) {
     localStorage.setItem('crbs_user', JSON.stringify(user));
   },
-  logout() {
+  logout(redirect = true) {
     localStorage.removeItem('crbs_token');
     localStorage.removeItem('crbs_user');
-    window.location.href = '/login.html';
+    if (redirect) {
+      const isFile = typeof window !== 'undefined' && window.location && window.location.protocol === 'file:';
+      window.location.href = isFile ? 'login.html' : '/login.html';
+    }
   },
   isAuthenticated() {
     return !!this.getToken() && !!this.getUser();
   },
   requireAuth(allowedRoles = []) {
+    const isFile = typeof window !== 'undefined' && window.location && window.location.protocol === 'file:';
     if (!this.isAuthenticated()) {
-      window.location.href = `/login.html?redirect=${encodeURIComponent(window.location.pathname)}`;
+      const loginTarget = isFile ? 'login.html' : `/login.html?redirect=${encodeURIComponent(window.location.pathname)}`;
+      window.location.href = loginTarget;
       return false;
     }
     const user = this.getUser();
     if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
       alert(`Access Restricted: This page requires ${allowedRoles.join(' or ')} privileges.`);
       // Redirect to their respective dashboard
-      if (user.role === 'admin') window.location.href = '/admin-dashboard.html';
-      else if (user.role === 'faculty') window.location.href = '/faculty-dashboard.html';
-      else window.location.href = '/student-dashboard.html';
+      if (user.role === 'admin') window.location.href = isFile ? 'admin-dashboard.html' : '/admin-dashboard.html';
+      else if (user.role === 'faculty' || user.role === 'staff') window.location.href = isFile ? 'faculty-dashboard.html' : '/faculty-dashboard.html';
+      else window.location.href = isFile ? 'student-dashboard.html' : '/student-dashboard.html';
       return false;
     }
     return true;
@@ -64,8 +87,17 @@ async function fetchApi(endpoint, options = {}) {
     const data = await res.json().catch(() => ({ success: false, message: 'Invalid response from server' }));
 
     if (res.status === 401 && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
-      Auth.logout();
-      return { success: false, message: 'Session expired. Please log in again.' };
+      const hadToken = !!Auth.getToken();
+      Auth.logout(false);
+      
+      const publicPages = ['/index.html', '/', '/login.html', '/register.html', '/classrooms.html', '/classroom-details.html', '/calendar.html', '/resources.html'];
+      const currentPath = window.location.pathname;
+      const isPublic = publicPages.some(p => currentPath === p || (p !== '/' && currentPath.endsWith(p)));
+
+      if (!isPublic && hadToken) {
+        window.location.href = `/login.html?redirect=${encodeURIComponent(currentPath)}`;
+      }
+      return { success: false, message: 'Authentication required or session expired.' };
     }
 
     return { ...data, statusCode: res.status, ok: res.ok };
@@ -160,9 +192,9 @@ function renderNavbar(activePage = '') {
     if (user.role === 'admin') {
       dashboardUrl = '/admin-dashboard.html';
       dashboardName = 'Admin Dashboard';
-    } else if (user.role === 'faculty') {
+    } else if (user.role === 'faculty' || user.role === 'staff') {
       dashboardUrl = '/faculty-dashboard.html';
-      dashboardName = 'Faculty Dashboard';
+      dashboardName = user.role === 'staff' ? 'Staff Portal' : 'Faculty Dashboard';
     } else {
       dashboardUrl = '/student-dashboard.html';
       dashboardName = 'Student Dashboard';
@@ -173,8 +205,8 @@ function renderNavbar(activePage = '') {
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
       <div class="container-fluid">
         <a class="navbar-brand" href="/index.html">
-          <i class="bi bi-building-check text-warning fs-4"></i>
-          <span>CRBS <span class="badge bg-warning text-dark fw-bold ms-1" style="font-size: 0.65rem;">IA3</span></span>
+          <i class="bi bi-mortarboard-fill text-white fs-4 me-2"></i>
+          <span>Classroom Resource Booking System</span>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
@@ -292,4 +324,132 @@ function renderFooter() {
       </div>
     </footer>
   `;
+}
+
+// Render Navy Blue Sidebar for Dashboards
+function renderSidebar(activeItem = 'dashboard') {
+  const mount = document.getElementById('sidebarMount');
+  if (!mount) return;
+
+  const user = Auth.getUser() || { name: 'User', role: 'student', email: '' };
+  const isAdmin = user.role === 'admin';
+  const isFacultyOrStaff = user.role === 'faculty' || user.role === 'staff';
+
+  const userInitial = user.name ? user.name[0].toUpperCase() : 'U';
+
+  let roleDashboard = '/student-dashboard.html';
+  if (isAdmin) roleDashboard = '/admin-dashboard.html';
+  else if (isFacultyOrStaff) roleDashboard = '/faculty-dashboard.html';
+
+  mount.innerHTML = `
+    <!-- Mobile Backdrop -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar(false)"></div>
+
+    <!-- Navy Blue Sidebar -->
+    <aside class="sidebar-navy" id="appSidebar">
+      <div class="sidebar-brand-container">
+        <a class="sidebar-brand" href="/index.html">
+          <div class="brand-icon-wrapper">
+            <i class="bi bi-mortarboard-fill"></i>
+          </div>
+          <div class="brand-text">
+            <span class="brand-title">Classroom System</span>
+            <span class="brand-subtitle">Resource Portal</span>
+          </div>
+        </a>
+      </div>
+
+      <div class="sidebar-user-pill">
+        <div class="user-avatar-sm">${userInitial}</div>
+        <div class="user-meta text-truncate">
+          <span class="user-name text-truncate">${user.name}</span>
+          <span class="user-role-badge">${user.role}</span>
+        </div>
+      </div>
+
+      <div class="sidebar-menu-wrapper">
+        <div class="sidebar-heading">Main Menu</div>
+        <ul class="sidebar-menu">
+          <li>
+            <a class="sidebar-nav-link ${activeItem === 'dashboard' ? 'active' : ''}" href="${roleDashboard}">
+              <i class="bi bi-grid-fill"></i><span>Dashboard</span>
+            </a>
+          </li>
+          <li>
+            <a class="sidebar-nav-link ${activeItem === 'booking' ? 'active' : ''}" href="/booking.html">
+              <i class="bi bi-calendar-plus-fill"></i><span>Book Resource</span>
+            </a>
+          </li>
+          <li>
+            <a class="sidebar-nav-link ${activeItem === 'my-bookings' ? 'active' : ''}" href="/my-bookings.html">
+              <i class="bi bi-journal-bookmark-fill"></i><span>My Bookings</span>
+            </a>
+          </li>
+          <li>
+            <a class="sidebar-nav-link ${activeItem === 'resources' || activeItem === 'classrooms' ? 'active' : ''}" href="/classrooms.html">
+              <i class="bi bi-collection-fill"></i><span>Resources</span>
+            </a>
+          </li>
+
+          ${isAdmin ? `
+          <div class="sidebar-heading mt-3">Administration</div>
+          <li>
+            <a class="sidebar-nav-link ${activeItem === 'admin' || activeItem === 'admin-approvals' ? 'active' : ''}" href="/admin-dashboard.html">
+              <i class="bi bi-shield-lock-fill"></i><span>Admin Approvals</span>
+            </a>
+          </li>
+          <li>
+            <a class="sidebar-nav-link ${activeItem === 'reports' ? 'active' : ''}" href="/reports.html">
+              <i class="bi bi-graph-up"></i><span>Reports & Analytics</span>
+            </a>
+          </li>
+          ` : ''}
+
+          <div class="sidebar-heading mt-3">Account</div>
+          <li>
+            <a class="sidebar-nav-link ${activeItem === 'notifications' ? 'active' : ''}" href="/notifications.html">
+              <i class="bi bi-bell-fill"></i><span>Notifications</span>
+              <span class="badge bg-danger rounded-pill d-none" id="sidebarNotifBadge">0</span>
+            </a>
+          </li>
+          <li>
+            <a class="sidebar-nav-link ${activeItem === 'profile' ? 'active' : ''}" href="/profile.html">
+              <i class="bi bi-person-fill"></i><span>Profile</span>
+            </a>
+          </li>
+          <li>
+            <a class="sidebar-nav-link sidebar-logout-link" href="javascript:void(0)" onclick="Auth.logout()">
+              <i class="bi bi-box-arrow-right"></i><span>Sign Out</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </aside>
+  `;
+
+  // Update notification badge on sidebar
+  fetchApi('/notifications').then(res => {
+    if (res && res.success && res.unreadCount > 0) {
+      const b = document.getElementById('sidebarNotifBadge');
+      if (b) {
+        b.textContent = res.unreadCount;
+        b.classList.remove('d-none');
+      }
+    }
+  });
+}
+
+function toggleSidebar(forceState) {
+  const sb = document.getElementById('appSidebar');
+  const bd = document.getElementById('sidebarBackdrop');
+  if (!sb) return;
+
+  const show = forceState !== undefined ? forceState : !sb.classList.contains('show');
+  if (show) {
+    sb.classList.add('show');
+    if (bd) bd.classList.add('show');
+  } else {
+    sb.classList.remove('show');
+    if (bd) bd.classList.remove('show');
+  }
 }

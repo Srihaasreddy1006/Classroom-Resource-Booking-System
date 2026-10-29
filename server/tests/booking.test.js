@@ -253,4 +253,61 @@ describe('Booking & Double-Booking Prevention Suite', () => {
     eq = await Resource.findById(portableProjector._id);
     expect(eq.availableQuantity).toBe(5);
   });
+
+  it('POLICY: should reserve slot while booking is Pending, and release slot when Rejected so another user can book', async () => {
+    const bookingDate = getFutureDate(7);
+
+    // 1. User 1 submits a pending booking
+    const res1 = await request(app)
+      .post('/api/bookings')
+      .set('Authorization', `Bearer ${studentToken}`)
+      .send({
+        classroomId: testClassroom._id,
+        date: bookingDate,
+        startTime: '14:00',
+        endTime: '16:00',
+        purpose: 'Original Pending Slot',
+        attendees: 20
+      });
+    expect(res1.status).toBe(201);
+    expect(res1.body.data.status).toBe('Pending');
+    const bookingId = res1.body.data._id;
+
+    // 2. User 2 tries to book overlapping slot (15:00 - 17:00) while User 1 is Pending -> 409 Conflict
+    const res2 = await request(app)
+      .post('/api/bookings')
+      .set('Authorization', `Bearer ${studentToken}`)
+      .send({
+        classroomId: testClassroom._id,
+        date: bookingDate,
+        startTime: '15:00',
+        endTime: '17:00',
+        purpose: 'Overlapping Slot Attempt',
+        attendees: 20
+      });
+    expect(res2.status).toBe(409);
+    expect(res2.body.message).toContain('conflict detected');
+
+    // 3. Admin rejects User 1 request
+    const rejectRes = await request(app)
+      .put(`/api/bookings/${bookingId}/status`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ status: 'Rejected', rejectionReason: 'Slot not suitable' });
+    expect(rejectRes.status).toBe(200);
+
+    // 4. User 2 retries booking the slot -> Now succeeds with 201 Created!
+    const retryRes = await request(app)
+      .post('/api/bookings')
+      .set('Authorization', `Bearer ${studentToken}`)
+      .send({
+        classroomId: testClassroom._id,
+        date: bookingDate,
+        startTime: '15:00',
+        endTime: '17:00',
+        purpose: 'Retry after slot released',
+        attendees: 20
+      });
+    expect(retryRes.status).toBe(201);
+    expect(retryRes.body.success).toBe(true);
+  });
 });

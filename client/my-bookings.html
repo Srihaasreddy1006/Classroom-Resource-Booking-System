@@ -10,49 +10,73 @@
 </head>
 <body class="bg-light">
 
-  <div id="navbarMount"></div>
+  <div class="app-layout">
+    <!-- Navy Blue Sidebar -->
+    <div id="sidebarMount"></div>
 
-  <div class="page-header">
-    <div class="container">
-      <div class="row align-items-center">
-        <div class="col-md-8">
-          <h2 class="fw-bold mb-1">My Classroom Bookings</h2>
-          <p class="text-muted small mb-0">Track your past and upcoming classroom requests, approval statuses, and equipment allocations</p>
+    <div class="app-main">
+      <!-- Top Navigation Bar -->
+      <div class="top-bar-navy">
+        <div class="d-flex align-items-center gap-3">
+          <button class="btn btn-sm btn-outline-secondary d-lg-none" type="button" onclick="toggleSidebar()">
+            <i class="bi bi-list fs-5"></i>
+          </button>
+          <div class="fw-bold fs-5 text-dark">
+            <i class="bi bi-journal-bookmark-fill text-primary me-2"></i>My Bookings
+          </div>
         </div>
-        <div class="col-md-4 text-md-end mt-3 mt-md-0">
-          <a href="/booking.html" class="btn btn-primary">
-            <i class="bi bi-calendar-plus me-1"></i>New Booking Request
+        <div class="d-flex align-items-center gap-3">
+          <a href="/booking.html" class="btn btn-sm btn-primary d-none d-sm-inline-flex align-items-center gap-1 shadow-sm">
+            <i class="bi bi-calendar-plus"></i>New Booking
           </a>
+          <a href="/notifications.html" class="btn btn-sm btn-light border position-relative" title="Notifications">
+            <i class="bi bi-bell"></i>
+            <span id="navUnreadBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
+          </a>
+          <div class="dropdown">
+            <button class="btn btn-sm btn-light border dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+              <span class="rounded-circle bg-primary text-white fw-bold px-2 py-1 small" id="topMyBookingsAvatar">U</span>
+              <span class="d-none d-md-inline" id="topMyBookingsName">User</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow">
+              <li><a class="dropdown-item" href="/profile.html"><i class="bi bi-person me-2"></i>Profile</a></li>
+              <li><a class="dropdown-item" href="/booking.html"><i class="bi bi-calendar-plus me-2"></i>Book Room</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="Auth.logout()"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+            </ul>
+          </div>
         </div>
       </div>
+
+  <!-- Page Content Container -->
+  <div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+      <div>
+        <h3 class="fw-bold text-dark mb-1">My Bookings</h3>
+        <p class="text-muted small mb-0">View and manage your room reservations and facility requests</p>
+      </div>
+      <a href="/booking.html" class="btn btn-primary">
+        <i class="bi bi-calendar-plus me-1"></i>Book a Resource
+      </a>
     </div>
-  </div>
 
-  <div class="container pb-5">
-    <!-- Filter Bar -->
-    <div class="custom-card p-3 mb-4">
-      <div class="row g-2 align-items-center">
-        <div class="col-6 col-md-3">
-          <label class="form-label small mb-1">Filter by Status</label>
-          <select id="statusFilter" class="form-select form-select-sm">
-            <option value="">All Statuses</option>
-            <option value="Approved">Approved</option>
-            <option value="Pending">Pending</option>
-            <option value="Rejected">Rejected</option>
-            <option value="Cancelled">Cancelled</option>
-          </select>
-        </div>
-
-        <div class="col-6 col-md-3">
-          <label class="form-label small mb-1">Filter by Date</label>
-          <input type="date" id="dateFilter" class="form-control form-control-sm">
-        </div>
-
-        <div class="col-12 col-md-6 d-flex align-items-end justify-content-md-end gap-2 mt-2 mt-md-0">
-          <button id="resetFilters" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Filters
-          </button>
-        </div>
+    <!-- Upcoming / Past Tabs & Filters -->
+    <div class="mb-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary btn-sm px-3" id="tabUpcoming" onclick="switchBookingTab('upcoming')">Upcoming</button>
+        <button class="btn btn-outline-secondary btn-sm px-3" id="tabPast" onclick="switchBookingTab('past')">Past</button>
+      </div>
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        <select id="statusFilter" class="form-select form-select-sm" style="width: 140px;">
+          <option value="">All Statuses</option>
+          <option value="Approved">Approved</option>
+          <option value="Pending">Pending</option>
+          <option value="Rejected">Rejected</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+        <input type="date" id="dateFilter" class="form-control form-control-sm" style="width: 150px;">
+        <button id="resetFilters" class="btn btn-sm btn-outline-secondary">Reset</button>
       </div>
     </div>
 
@@ -63,24 +87,22 @@
         <div class="small mt-2">Loading your booking history...</div>
       </div>
 
-      <div id="emptyBookings" class="empty-state d-none">
-        <i class="bi bi-journal-x"></i>
-        <h5>No reservations found</h5>
-        <p class="text-muted small mb-3">You don't have any bookings matching the current filter.</p>
-        <a href="/booking.html" class="btn btn-primary btn-sm">Reserve a Classroom Now</a>
+      <div id="emptyBookings" class="empty-state d-none py-5 text-center">
+        <i class="bi bi-journal-x fs-1 text-muted"></i>
+        <h5 class="mt-2">No bookings found</h5>
+        <p class="text-muted small mb-3">You don't have any reservations scheduled in this view.</p>
+        <a href="/booking.html" class="btn btn-primary btn-sm">Reserve a Resource Now</a>
       </div>
 
       <div class="table-responsive d-none" id="tableContainer">
-        <table class="table custom-table mb-0">
-          <thead>
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
             <tr>
-              <th>Booking Reference</th>
-              <th>Classroom</th>
-              <th>Date & Time</th>
-              <th>Attendees</th>
-              <th>Equipment Reserved</th>
-              <th>Status</th>
-              <th>Actions</th>
+              <th class="text-muted small fw-semibold">Resource Name</th>
+              <th class="text-muted small fw-semibold">Type</th>
+              <th class="text-muted small fw-semibold">Date & Time</th>
+              <th class="text-muted small fw-semibold">Status</th>
+              <th class="text-muted small fw-semibold">Actions</th>
             </tr>
           </thead>
           <tbody id="bookingsTableBody"></tbody>
@@ -90,6 +112,9 @@
   </div>
 
   <div id="footerMount"></div>
+
+    </div> <!-- /app-main -->
+  </div> <!-- /app-layout -->
 
   <!-- Cancel Modal -->
   <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
@@ -127,6 +152,27 @@
       modal.show();
     }
 
+    let currentTab = 'upcoming';
+
+    function switchBookingTab(tab) {
+      currentTab = tab;
+      const todayStr = new Date().toISOString().split('T')[0];
+      const upBtn = document.getElementById('tabUpcoming');
+      const pastBtn = document.getElementById('tabPast');
+
+      if (tab === 'upcoming') {
+        upBtn.className = 'btn btn-primary btn-sm px-3';
+        pastBtn.className = 'btn btn-outline-secondary btn-sm px-3';
+        const filtered = myBookings.filter(b => b.date >= todayStr);
+        renderBookings(filtered);
+      } else {
+        upBtn.className = 'btn btn-outline-secondary btn-sm px-3';
+        pastBtn.className = 'btn btn-primary btn-sm px-3';
+        const filtered = myBookings.filter(b => b.date < todayStr);
+        renderBookings(filtered);
+      }
+    }
+
     function renderBookings(list) {
       const container = document.getElementById('tableContainer');
       const empty = document.getElementById('emptyBookings');
@@ -142,37 +188,30 @@
       container.classList.remove('d-none');
 
       tbody.innerHTML = list.map(b => {
-        const eqText = b.additionalEquipment && b.additionalEquipment.length > 0
-          ? b.additionalEquipment.map(e => `<span class="badge bg-light text-dark border me-1">${e.resourceName} (${e.quantity})</span>`).join('')
-          : '<span class="text-muted small">None</span>';
+        const roomName = b.classroom ? b.classroom.name : (b.equipment ? b.equipment.name : 'Classroom');
+        const roomType = b.classroom ? (b.classroom.type.toLowerCase().includes('lab') ? 'Lab' : 'Classroom') : 'Facility';
+        const statusBadge = b.status === 'Approved'
+          ? '<span class="badge bg-success">Confirmed</span>'
+          : (b.status === 'Pending'
+            ? '<span class="badge bg-warning text-dark">Pending</span>'
+            : `<span class="badge bg-secondary">${b.status}</span>`);
 
         return `
           <tr>
             <td>
-              <span class="fw-bold font-monospace text-primary">${b.bookingId}</span>
-              <div class="small text-muted">Created: ${new Date(b.createdAt).toLocaleDateString()}</div>
+              <span class="fw-bold text-dark">${roomName}</span>
             </td>
             <td>
-              <span class="fw-semibold">${b.classroom ? b.classroom.name : 'Unknown Room'}</span>
-              <div class="small text-muted">${b.classroom ? b.classroom.classroomId + ' • ' + b.classroom.building : ''}</div>
+              <span class="text-secondary">${roomType}</span>
             </td>
             <td>
-              <div class="fw-medium">${formatDate(b.date)}</div>
-              <div class="small text-muted"><i class="bi bi-clock me-1"></i>${b.startTime} - ${b.endTime}</div>
+              <span class="text-dark">${formatDate(b.date)} ${b.startTime} - ${b.endTime}</span>
             </td>
-            <td><i class="bi bi-people me-1 text-muted"></i>${b.attendees}</td>
-            <td style="max-width: 180px;">${eqText}</td>
+            <td>${statusBadge}</td>
             <td>
-              ${formatStatusBadge(b.status)}
-              ${b.rejectionReason ? `<div class="small text-danger mt-1">Reason: ${b.rejectionReason}</div>` : ''}
-              ${b.cancellationReason ? `<div class="small text-muted mt-1">Cancelled: ${b.cancellationReason}</div>` : ''}
-            </td>
-            <td>
-              ${['Pending', 'Approved'].includes(b.status) ? `
-                <button class="btn btn-outline-danger btn-sm" onclick="openCancelModal('${b._id}')">
-                  Cancel
-                </button>
-              ` : '<span class="text-muted small">Locked</span>'}
+              <button class="btn btn-sm btn-primary px-3" onclick="openCancelModal('${b._id}')">
+                View
+              </button>
             </td>
           </tr>
         `;
@@ -180,8 +219,10 @@
     }
 
     function applyFilters() {
-      const status = document.getElementById('statusFilter').value;
-      const date = document.getElementById('dateFilter').value;
+      const statusEl = document.getElementById('statusFilter');
+      const dateEl = document.getElementById('dateFilter');
+      const status = statusEl ? statusEl.value : '';
+      const date = dateEl ? dateEl.value : '';
 
       const filtered = myBookings.filter(b => {
         const matchesStatus = !status || b.status === status;
@@ -195,8 +236,14 @@
     document.addEventListener('DOMContentLoaded', async () => {
       if (!Auth.requireAuth()) return;
 
-      renderNavbar('my-bookings');
-      renderFooter();
+      renderSidebar('my-bookings');
+      const u = Auth.getUser();
+      if (u) {
+        const myNameEl = document.getElementById('topMyBookingsName');
+        if (myNameEl) myNameEl.textContent = u.name;
+        const myAvatarEl = document.getElementById('topMyBookingsAvatar');
+        if (myAvatarEl) myAvatarEl.textContent = u.name ? u.name[0].toUpperCase() : 'U';
+      }
 
       const res = await fetchApi('/bookings/my-bookings');
       document.getElementById('loadingBookings').classList.add('d-none');
@@ -206,14 +253,20 @@
         renderBookings(myBookings);
       }
 
-      document.getElementById('statusFilter').addEventListener('change', applyFilters);
-      document.getElementById('dateFilter').addEventListener('change', applyFilters);
+      const statusFilterEl = document.getElementById('statusFilter');
+      if (statusFilterEl) statusFilterEl.addEventListener('change', applyFilters);
 
-      document.getElementById('resetFilters').addEventListener('click', () => {
-        document.getElementById('statusFilter').value = '';
-        document.getElementById('dateFilter').value = '';
-        renderBookings(myBookings);
-      });
+      const dateFilterEl = document.getElementById('dateFilter');
+      if (dateFilterEl) dateFilterEl.addEventListener('change', applyFilters);
+
+      const resetFiltersEl = document.getElementById('resetFilters');
+      if (resetFiltersEl) {
+        resetFiltersEl.addEventListener('click', () => {
+          if (statusFilterEl) statusFilterEl.value = '';
+          if (dateFilterEl) dateFilterEl.value = '';
+          renderBookings(myBookings);
+        });
+      }
 
       // Confirm Cancellation
       document.getElementById('confirmCancelBtn').addEventListener('click', async () => {

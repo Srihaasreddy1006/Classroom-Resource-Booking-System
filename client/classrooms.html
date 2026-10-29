@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Classrooms Directory — Classroom Resource Booking System</title>
+  <title>Browse Resources & Classrooms — Classroom Resource Booking System</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
+<body class="bg-light">
 
   <div id="navbarMount"></div>
 
@@ -16,12 +16,13 @@
     <div class="container">
       <div class="row align-items-center">
         <div class="col-md-8">
-          <h2 class="fw-bold mb-1">Campus Classrooms & Facilities</h2>
-          <p class="text-muted small mb-0">Browse and inspect availability across all 10 university lecture rooms, laboratories, and halls</p>
+          <span class="badge bg-primary text-white mb-2"><i class="bi bi-grid-3x3-gap-fill me-1"></i>University Resource Directory</span>
+          <h2 class="fw-bold mb-1">Campus Classrooms & Educational Resources</h2>
+          <p class="text-muted small mb-0">Browse and inspect availability across Classrooms, Computer Labs, Seminar Halls, Projectors, and Other Campus Facilities</p>
         </div>
         <div class="col-md-4 text-md-end mt-3 mt-md-0">
-          <a href="/booking.html" class="btn btn-primary">
-            <i class="bi bi-calendar-plus me-1"></i>Book a Classroom
+          <a href="/booking.html" class="btn btn-primary shadow-sm">
+            <i class="bi bi-calendar-plus me-1"></i>Book a Resource
           </a>
         </div>
       </div>
@@ -29,19 +30,44 @@
   </div>
 
   <div class="container pb-5">
+
+    <!-- Primary Resource Category Selector -->
+    <div class="custom-card p-3 mb-3 shadow-sm bg-white">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div class="d-flex flex-wrap gap-2 align-items-center" id="categoryPillGroup">
+          <span class="small fw-bold text-muted text-uppercase me-2"><i class="bi bi-funnel-fill text-primary me-1"></i>Categories:</span>
+          <button type="button" class="btn btn-sm btn-primary cat-pill" data-cat="all">
+            <i class="bi bi-grid-fill me-1"></i>All Resources
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-primary cat-pill" data-cat="classrooms">
+            <i class="bi bi-door-open me-1"></i>Classrooms
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-primary cat-pill" data-cat="computer_labs">
+            <i class="bi bi-pc-display me-1"></i>Computer Labs
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-primary cat-pill" data-cat="seminar_halls">
+            <i class="bi bi-building me-1"></i>Seminar Halls
+          </button>
+        </div>
+        <div>
+          <span class="badge bg-secondary" id="resultsCountBadge">Loading...</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Filter and Search Bar -->
-    <div class="custom-card p-3 mb-4">
+    <div class="custom-card p-3 mb-4 shadow-sm bg-white">
       <div class="row g-2 align-items-center">
         <div class="col-md-4">
           <div class="input-group input-group-sm">
             <span class="input-group-text"><i class="bi bi-search"></i></span>
-            <input type="text" id="searchInput" class="form-control" placeholder="Search by name, ID (e.g. CR-101), or building...">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search by name, ID (e.g. CR-101), or keyword...">
           </div>
         </div>
 
-        <div class="col-6 col-md-2">
+        <div class="col-6 col-md-3">
           <select id="typeFilter" class="form-select form-select-sm">
-            <option value="">All Room Types</option>
+            <option value="">All Types</option>
             <option value="Standard classroom">Standard classroom</option>
             <option value="Smart classroom">Smart classroom</option>
             <option value="Seminar hall">Seminar hall</option>
@@ -50,29 +76,17 @@
           </select>
         </div>
 
-        <div class="col-6 col-md-2">
-          <select id="buildingFilter" class="form-select form-select-sm">
-            <option value="">All Buildings</option>
-            <option value="Main Academic Block">Main Academic Block</option>
-            <option value="Dr. APJ Abdul Kalam Auditorium Complex">Auditorium Complex</option>
-            <option value="Turing Computing Centre">Turing Computing Centre</option>
-            <option value="Administrative & Faculty Block">Administrative Block</option>
-            <option value="Science & Humanities Block">Science & Humanities</option>
-            <option value="Innovation & Incubation Centre">Innovation Centre</option>
-          </select>
-        </div>
-
-        <div class="col-6 col-md-2">
+        <div class="col-6 col-md-3">
           <select id="capacityFilter" class="form-select form-select-sm">
-            <option value="">Min Capacity</option>
-            <option value="30">30+ Seats</option>
-            <option value="50">50+ Seats</option>
-            <option value="75">75+ Seats</option>
-            <option value="150">150+ Seats</option>
+            <option value="">Any Capacity</option>
+            <option value="25">25+ Attendees</option>
+            <option value="50">50+ Attendees</option>
+            <option value="75">75+ Attendees</option>
+            <option value="150">150+ Attendees</option>
           </select>
         </div>
 
-        <div class="col-6 col-md-2 d-flex gap-1">
+        <div class="col-12 col-md-2 d-flex gap-1">
           <button id="resetFiltersBtn" class="btn btn-sm btn-outline-secondary w-100">
             <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
           </button>
@@ -80,18 +94,21 @@
       </div>
     </div>
 
-    <!-- Classrooms Grid -->
+    <!-- Loading State -->
     <div id="loadingClassrooms" class="spinner-container">
       <div class="spinner-border text-primary" role="status"></div>
-      <div class="small mt-2">Loading classrooms directory...</div>
+      <div class="small mt-2">Loading campus resources...</div>
     </div>
 
+    <!-- Empty State -->
     <div id="noResults" class="empty-state d-none">
       <i class="bi bi-search"></i>
-      <h5>No matching classrooms found</h5>
-      <p class="text-muted small">Try adjusting your search criteria or resetting filters.</p>
+      <h5>No matching resources found</h5>
+      <p class="text-muted small">Try adjusting your category selection, search terms, or resetting filters.</p>
+      <button class="btn btn-sm btn-primary" onclick="resetAllFilters()">Reset All Filters</button>
     </div>
 
+    <!-- Resources Grid -->
     <div id="classroomsGrid" class="row g-4 d-none"></div>
   </div>
 
@@ -101,117 +118,235 @@
   <script src="/js/api.js"></script>
   <script>
     let allClassrooms = [];
+    let allEquipment = [];
+    let activeCategory = 'all';
 
-    function renderClassrooms(rooms) {
+    const equipImages = {
+      'Projectors': 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=600&auto=format&fit=crop&q=60',
+      'Smart boards': 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=600&auto=format&fit=crop&q=60',
+      'Computers': 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600&auto=format&fit=crop&q=60',
+      'Whiteboards': 'https://images.unsplash.com/photo-1577896851231-70ef18881754?w=600&auto=format&fit=crop&q=60',
+      'Speakers and microphones': 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=600&auto=format&fit=crop&q=60',
+      'Wi-Fi facilities': 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=600&auto=format&fit=crop&q=60',
+      'Portable presentation equipment': 'https://images.unsplash.com/photo-1585076641399-5c06d1b3365f?w=600&auto=format&fit=crop&q=60',
+      'Laboratory equipment': 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&auto=format&fit=crop&q=60'
+    };
+
+    function renderItems(items, isEquipMode = false) {
       const grid = document.getElementById('classroomsGrid');
       const noResults = document.getElementById('noResults');
+      const badge = document.getElementById('resultsCountBadge');
 
-      if (!rooms || rooms.length === 0) {
+      if (!items || items.length === 0) {
         grid.classList.add('d-none');
         noResults.classList.remove('d-none');
+        badge.textContent = '0 items found';
         return;
       }
 
       noResults.classList.add('d-none');
       grid.classList.remove('d-none');
+      badge.textContent = `${items.length} resource${items.length === 1 ? '' : 's'} available`;
 
-      grid.innerHTML = rooms.map(room => {
-        const facilitiesBadges = (room.facilities || []).slice(0, 3)
-          .map(f => `<span class="badge bg-light text-dark border me-1 mb-1">${f}</span>`)
-          .join('');
+      if (isEquipMode) {
+        // Render equipment cards
+        grid.innerHTML = items.map(eq => {
+          const imgUrl = equipImages[eq.category] || 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=600';
+          const isAvail = eq.status === 'available' && eq.availableQuantity > 0;
 
-        return `
-          <div class="col-md-6 col-lg-4">
-            <div class="custom-card h-100 d-flex flex-column overflow-hidden">
-              <div style="height: 180px; position: relative; background-color: #cbd5e1;">
-                <img src="${room.imageUrl || 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=600'}" alt="${room.name}" style="width: 100%; height: 100%; object-fit: cover;">
-                <span class="position-absolute top-0 end-0 m-2 badge ${room.status === 'active' ? 'bg-success' : 'bg-warning'} text-capitalize">
-                  ${room.status}
-                </span>
-                <span class="position-absolute bottom-0 start-0 m-2 badge bg-dark bg-opacity-75 text-white font-monospace">
-                  ${room.classroomId}
-                </span>
-              </div>
-              <div class="p-4 d-flex flex-column flex-grow-1">
-                <div class="d-flex justify-content-between align-items-start mb-1">
-                  <h5 class="fw-bold mb-0">${room.name}</h5>
-                  <span class="badge bg-primary text-white">${room.type}</span>
+          return `
+            <div class="col-md-6 col-lg-4">
+              <div class="custom-card h-100 d-flex flex-column overflow-hidden shadow-sm">
+                <div class="resource-card-img-wrapper">
+                  <img src="${imgUrl}" alt="${eq.name}">
+                  <span class="resource-pill-floating">${eq.resourceId}</span>
                 </div>
-                <div class="small text-muted mb-2">
-                  <i class="bi bi-geo-alt me-1"></i>${room.building} • ${room.floor}
-                </div>
-                <p class="small text-muted flex-grow-1 mb-3">${room.description}</p>
-
-                <div class="mb-3">
-                  <div class="small fw-semibold text-muted mb-1">Key Facilities:</div>
-                  <div class="d-flex flex-wrap">${facilitiesBadges}</div>
-                </div>
-
-                <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-auto">
-                  <span class="badge bg-secondary text-white"><i class="bi bi-people-fill me-1"></i>${room.capacity} Capacity</span>
-                  <div class="d-flex gap-1">
-                    <a href="/classroom-details.html?id=${room._id}" class="btn btn-sm btn-outline-primary" title="View Schedule">
-                      Details
-                    </a>
-                    <a href="/booking.html?roomId=${room._id}" class="btn btn-sm btn-primary">
-                      Book Slot
+                <div class="p-3 d-flex flex-column flex-grow-1">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <h5 class="fw-bold mb-0 text-dark">${eq.name}</h5>
+                    <span class="badge ${isAvail ? 'bg-success' : 'bg-danger'}">${isAvail ? 'Available' : 'Out of Stock'}</span>
+                  </div>
+                  <div class="small text-muted mb-2">
+                    <i class="bi bi-tag me-1"></i>Category: <span class="text-capitalize fw-semibold">${eq.category || eq.type}</span>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted small"><i class="bi bi-box-seam me-1"></i>Stock: ${eq.availableQuantity} of ${eq.totalQuantity}</span>
+                  </div>
+                  <div class="mt-auto">
+                    <a href="/booking.html?equipId=${eq._id}" class="btn btn-primary w-100 fw-semibold ${!isAvail ? 'disabled' : ''}">
+                      Book Resource
                     </a>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        `;
-      }).join('');
+          `;
+        }).join('');
+      } else {
+        // Render classroom / room cards
+        grid.innerHTML = items.map(room => {
+          return `
+            <div class="col-md-6 col-lg-4">
+              <div class="custom-card h-100 d-flex flex-column overflow-hidden shadow-sm">
+                <div class="resource-card-img-wrapper">
+                  <img src="${room.imageUrl || 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=600'}" alt="${room.name}">
+                  <span class="resource-pill-floating">${room.classroomId}</span>
+                </div>
+                <div class="p-3 d-flex flex-column flex-grow-1">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <h5 class="fw-bold mb-0 text-dark">
+                      <a href="/classroom-details.html?id=${room._id}" class="text-decoration-none text-dark">${room.name}</a>
+                    </h5>
+                    <a href="/classroom-details.html?id=${room._id}" class="text-muted small text-decoration-none" title="View details">
+                      <i class="bi bi-info-circle"></i>
+                    </a>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted small"><i class="bi bi-people me-1"></i>${room.capacity} seats</span>
+                    <span class="badge bg-success px-2 py-1">Available</span>
+                  </div>
+                  <div class="mt-auto">
+                    <a href="/booking.html?roomId=${room._id}" class="btn btn-primary w-100 fw-semibold">
+                      Book Now
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
     }
 
     function applyFilters() {
       const search = document.getElementById('searchInput').value.toLowerCase().trim();
       const type = document.getElementById('typeFilter').value;
-      const building = document.getElementById('buildingFilter').value;
       const minCap = Number(document.getElementById('capacityFilter').value) || 0;
 
+      if (activeCategory === 'projectors') {
+        const filtered = allEquipment.filter(eq => {
+          const isProj = eq.category === 'Projectors';
+          const matchesSearch = !search ||
+            eq.name.toLowerCase().includes(search) ||
+            eq.resourceId.toLowerCase().includes(search) ||
+            eq.description.toLowerCase().includes(search);
+          return isProj && matchesSearch;
+        });
+        renderItems(filtered, true);
+        return;
+      }
+
+      if (activeCategory === 'other_facilities') {
+        const filtered = allEquipment.filter(eq => {
+          const isOther = eq.category !== 'Projectors';
+          const matchesSearch = !search ||
+            eq.name.toLowerCase().includes(search) ||
+            eq.resourceId.toLowerCase().includes(search) ||
+            eq.category.toLowerCase().includes(search) ||
+            eq.description.toLowerCase().includes(search);
+          return isOther && matchesSearch;
+        });
+        renderItems(filtered, true);
+        return;
+      }
+
+      // Rooms filter
       const filtered = allClassrooms.filter(room => {
+        // Category check
+        if (activeCategory === 'classrooms') {
+          if (room.type !== 'Standard classroom' && room.type !== 'Smart classroom') return false;
+        } else if (activeCategory === 'computer_labs') {
+          if (room.type !== 'Computer laboratory') return false;
+        } else if (activeCategory === 'seminar_halls') {
+          if (room.type !== 'Seminar hall' && room.type !== 'Conference room') return false;
+        }
+
         const matchesSearch = !search ||
           room.name.toLowerCase().includes(search) ||
           room.classroomId.toLowerCase().includes(search) ||
           room.building.toLowerCase().includes(search) ||
+          room.type.toLowerCase().includes(search) ||
           room.description.toLowerCase().includes(search);
 
         const matchesType = !type || room.type === type;
-        const matchesBuilding = !building || room.building === building;
         const matchesCapacity = !minCap || room.capacity >= minCap;
 
-        return matchesSearch && matchesType && matchesBuilding && matchesCapacity;
+        return matchesSearch && matchesType && matchesCapacity;
       });
 
-      renderClassrooms(filtered);
+      renderItems(filtered, false);
+    }
+
+    function selectCategory(cat) {
+      activeCategory = cat;
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        if (btn.dataset.cat === cat) {
+          btn.className = 'btn btn-sm btn-primary cat-pill shadow-sm';
+        } else {
+          btn.className = 'btn btn-sm btn-outline-primary cat-pill';
+        }
+      });
+
+      // Update type dropdown visibility/relevance
+      const typeSelect = document.getElementById('typeFilter');
+      const capSelect = document.getElementById('capacityFilter');
+      if (cat === 'projectors' || cat === 'other_facilities') {
+        typeSelect.disabled = true;
+        capSelect.disabled = true;
+      } else {
+        typeSelect.disabled = false;
+        capSelect.disabled = false;
+      }
+
+      applyFilters();
+    }
+
+    function resetAllFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('typeFilter').value = '';
+      document.getElementById('capacityFilter').value = '';
+      selectCategory('all');
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
       renderNavbar('classrooms');
       renderFooter();
 
-      const res = await fetchApi('/classrooms');
+      // Fetch classrooms and equipment concurrently
+      const [roomRes, eqRes] = await Promise.all([
+        fetchApi('/classrooms'),
+        fetchApi('/resources')
+      ]);
+
       document.getElementById('loadingClassrooms').classList.add('d-none');
 
-      if (res.success && res.data) {
-        allClassrooms = res.data;
-        renderClassrooms(allClassrooms);
+      if (roomRes.success && roomRes.data) {
+        allClassrooms = roomRes.data;
+      }
+      if (eqRes.success && eqRes.data) {
+        allEquipment = eqRes.data;
+      }
+
+      // Setup Category Pill Listeners
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+          selectCategory(btn.dataset.cat);
+        });
+      });
+
+      // URL param category check (e.g. ?category=projectors)
+      const params = new URLSearchParams(window.location.search);
+      const urlCat = params.get('category');
+      if (urlCat && ['classrooms', 'computer_labs', 'seminar_halls', 'projectors', 'other_facilities'].includes(urlCat.toLowerCase())) {
+        selectCategory(urlCat.toLowerCase());
+      } else {
+        renderItems(allClassrooms, false);
       }
 
       document.getElementById('searchInput').addEventListener('input', applyFilters);
       document.getElementById('typeFilter').addEventListener('change', applyFilters);
-      document.getElementById('buildingFilter').addEventListener('change', applyFilters);
       document.getElementById('capacityFilter').addEventListener('change', applyFilters);
-
-      document.getElementById('resetFiltersBtn').addEventListener('click', () => {
-        document.getElementById('searchInput').value = '';
-        document.getElementById('typeFilter').value = '';
-        document.getElementById('buildingFilter').value = '';
-        document.getElementById('capacityFilter').value = '';
-        renderClassrooms(allClassrooms);
-      });
+      document.getElementById('resetFiltersBtn').addEventListener('click', resetAllFilters);
     });
   </script>
 </body>

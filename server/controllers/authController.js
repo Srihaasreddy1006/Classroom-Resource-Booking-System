@@ -48,8 +48,8 @@ const register = async (req, res, next) => {
       });
     }
 
-    // Role safety: Only student and faculty can be registered openly; admin accounts are reserved
-    const safeRole = role && ['student', 'faculty'].includes(role) ? role : 'student';
+    // Role safety: Regular user, student, faculty, and staff can be registered openly; admin accounts are created via setup command
+    const safeRole = role && ['student', 'faculty', 'staff', 'user'].includes(role) ? role : 'user';
 
     const user = await User.create({
       name: name.trim(),

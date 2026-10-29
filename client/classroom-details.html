@@ -29,58 +29,47 @@
 
     <div id="contentDetails" class="d-none">
       <div class="row g-4 mb-4">
-        <!-- Room Info Column -->
-        <div class="col-lg-7">
-          <div class="custom-card p-4 h-100">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-              <div>
-                <span class="badge bg-primary text-white mb-1" id="roomTypeBadge">Standard Classroom</span>
-                <h2 class="fw-bold mb-0" id="roomTitle">Classroom Name</h2>
-              </div>
-              <span class="badge bg-secondary font-monospace fs-6" id="roomCodeBadge">CR-101</span>
-            </div>
-
-            <div class="text-muted small mb-3">
-              <i class="bi bi-geo-alt me-1 text-danger"></i><span id="roomLocation">Building & Floor</span>
-              <span class="mx-2">•</span>
-              <i class="bi bi-people-fill me-1 text-primary"></i><span id="roomCapacity">60 Seats Maximum</span>
-              <span class="mx-2">•</span>
-              <span id="roomStatusBadge" class="badge bg-success text-capitalize">Active</span>
-            </div>
-
-            <p class="text-secondary" id="roomDescription">Detailed description of this classroom facility.</p>
-
-            <h6 class="fw-bold mt-4 mb-2"><i class="bi bi-check2-circle text-success me-1"></i>Installed Facilities & Amenities:</h6>
-            <div id="facilitiesContainer" class="d-flex flex-wrap gap-2 mb-4"></div>
-
-            <h6 class="fw-bold mb-2"><i class="bi bi-cpu text-primary me-1"></i>Installed Multimedia & Lab Hardware:</h6>
-            <div id="installedEquipmentContainer" class="list-group mb-4"></div>
-
-            <div class="d-flex gap-2 pt-3 border-top">
-              <a id="bookRoomBtn" href="/booking.html" class="btn btn-primary px-4">
-                <i class="bi bi-calendar-plus me-1"></i>Book This Room
-              </a>
-              <a href="/classrooms.html" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i>Back to Directory
-              </a>
+        <!-- Room Image / Visual Column (Left) -->
+        <div class="col-lg-5">
+          <div class="custom-card overflow-hidden h-100 d-flex flex-column shadow-sm">
+            <div style="min-height: 280px; height: 100%; background-color: #cbd5e1;">
+              <img id="roomImage" src="" alt="Classroom Image" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
           </div>
         </div>
 
-        <!-- Room Image / Visual Column -->
-        <div class="col-lg-5">
-          <div class="custom-card overflow-hidden h-100 d-flex flex-column">
-            <div style="height: 260px; background-color: #cbd5e1;">
-              <img id="roomImage" src="" alt="Classroom Image" style="width: 100%; height: 100%; object-fit: cover;">
+        <!-- Room Info Column (Right) -->
+        <div class="col-lg-7">
+          <div class="custom-card p-4 h-100 d-flex flex-column shadow-sm">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <h2 class="fw-bold mb-0 text-dark" id="roomTitle">Classroom 101</h2>
+                <span class="badge bg-light text-primary border font-monospace mt-1" id="roomCodeBadge">CR-101</span>
+              </div>
+              <span id="roomStatusBadge" class="badge bg-success px-3 py-2">Available: Yes</span>
             </div>
-            <div class="p-4 bg-light flex-grow-1">
-              <h6 class="fw-bold mb-2"><i class="bi bi-shield-check text-success me-1"></i>Booking Policies & Capacity Rules</h6>
-              <ul class="small text-muted ps-3 mb-0">
-                <li>Double bookings are strictly prohibited and prevented by server validation.</li>
-                <li>Expected attendees must not exceed the verified seating capacity.</li>
-                <li>Reservations must be submitted at least 30 minutes in duration.</li>
-                <li>Requests are reviewed by facilities administration before approval.</li>
-              </ul>
+
+            <div class="mb-3 text-secondary">
+              <div class="mb-1"><strong>Type:</strong> <span id="roomTypeBadge">Classroom</span></div>
+              <div class="mb-1"><strong>Capacity:</strong> <span id="roomCapacity">60 seats</span></div>
+              <div class="mb-1"><strong>Location:</strong> <span id="roomLocation">Main Block - Floor 1</span></div>
+            </div>
+
+            <div class="mb-3">
+              <h6 class="fw-bold text-dark mb-1">Description</h6>
+              <p class="text-secondary small mb-0" id="roomDescription">Standard classroom with projector, whiteboard and smart board.</p>
+            </div>
+
+            <div class="mb-4">
+              <h6 class="fw-bold text-dark mb-2">Facilities:</h6>
+              <div id="facilitiesContainer" class="d-flex flex-wrap gap-2"></div>
+              <div id="installedEquipmentContainer" class="mt-2 list-group list-group-flush"></div>
+            </div>
+
+            <div class="mt-auto pt-3 border-top">
+              <a id="bookRoomBtn" href="/booking.html" class="btn btn-primary btn-lg w-100 fw-semibold">
+                Book This Resource
+              </a>
             </div>
           </div>
         </div>
@@ -220,7 +209,8 @@
         document.getElementById('breadcrumbRoomName').textContent = room.name;
         document.getElementById('roomTitle').textContent = room.name;
         document.getElementById('roomTypeBadge').textContent = room.type;
-        document.getElementById('roomCodeBadge').textContent = room.classroomId;
+        const codeBadge = document.getElementById('roomCodeBadge');
+        if (codeBadge) codeBadge.textContent = room.classroomId;
         document.getElementById('roomLocation').textContent = `${room.building}, ${room.floor}`;
         document.getElementById('roomCapacity').textContent = `${room.capacity} Max Seats`;
         document.getElementById('roomDescription').textContent = room.description;
@@ -245,7 +235,7 @@
 
         // Installed Equipment
         const eqContainer = document.getElementById('installedEquipmentContainer');
-        if (room.installedEquipment && room.installedEquipment.length > 0) {
+        if (eqContainer && room.installedEquipment && room.installedEquipment.length > 0) {
           eqContainer.innerHTML = room.installedEquipment.map(eq => `
             <div class="list-group-item d-flex justify-content-between align-items-center p-2">
               <div>

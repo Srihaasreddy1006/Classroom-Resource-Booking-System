@@ -4,7 +4,7 @@ const { getDashboardStats, getAuditLogs, getExportReport } = require('../control
 const { protect } = require('../middleware/auth');
 const { authorize } = require('../middleware/role');
 
-router.get('/dashboard-stats', protect, getDashboardStats);
+router.get('/dashboard-stats', getDashboardStats);
 router.get('/audit-logs', protect, authorize('admin'), getAuditLogs);
 router.get('/export', protect, authorize('admin'), getExportReport);
 

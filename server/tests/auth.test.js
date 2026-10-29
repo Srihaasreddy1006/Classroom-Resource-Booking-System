@@ -70,6 +70,24 @@ describe('User Authentication & Authorization Suite', () => {
     expect(res.body.message).toContain('Incorrect password');
   });
 
+  it('should successfully register a staff member user', async () => {
+    const staffUser = {
+      name: 'Campus Staff Member',
+      email: 'staff.test@college.edu',
+      password: 'Password@123',
+      role: 'staff',
+      department: 'Facilities & Logistics',
+      idNumber: 'STF-0099'
+    };
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send(staffUser);
+
+    expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);
+    expect(res.body.user.role).toBe('staff');
+  });
+
   it('should protect private profile endpoint from unauthorized requests without token', async () => {
     const res = await request(app).get('/api/auth/me');
     expect(res.status).toBe(401);
